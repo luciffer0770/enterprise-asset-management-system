@@ -1,0 +1,55 @@
+flowchart TD
+  subgraph Procurement
+    A[Need identified in org unit] --> B[Request created]
+    B --> C{Approval required?}
+    C -->|Yes| D[Approve request]
+    C -->|No| E[Create purchase order]
+    D --> E
+    E --> F[Receive item]
+    F --> G[Create asset + tag assignment]
+    G --> H{Calibration required?}
+    H -->|Yes| I[Schedule calibration]
+    H -->|No| J[Set IN_SERVICE]
+    I --> J
+    J --> K[Ready for checkout/reservation]
+  end
+
+flowchart TD
+  subgraph CheckoutReservation
+    A[User searches or scans asset] --> B{Asset available?}
+    B -->|No| C[Show next availability + offer reservation]
+    B -->|Yes| D[Optional reservation]
+    D --> E[Checkout form: borrower, due date, condition]
+    E --> F[Create checkout + set CHECKED_OUT]
+    F --> G[Audit event appended]
+    G --> H[Return scan]
+    H --> I[Condition in + notes]
+    I --> J{Needs repair/calibration?}
+    J -->|Yes| K[Create work order or calibration event]
+    J -->|No| L[Set IN_SERVICE]
+    K --> M[Set UNDER_MAINTENANCE or UNDER_CALIBRATION]
+  end
+
+flowchart TD
+  subgraph Transfer
+    A[Request transfer asset to another org unit] --> B{Approval required?}
+    B -->|Yes| C[Admin/custodian approval]
+    B -->|No| D[Update owner_org_unit + location/pool]
+    C --> D
+    D --> E[Append audit event]
+    E --> F[Notify receiving org unit]
+  end
+
+flowchart TD
+  subgraph IncidentRepair
+    A[Incident reported] --> B{Safety critical?}
+    B -->|Yes| C[Set QUARANTINED]
+    B -->|No| D[Create work order]
+    C --> D
+    D --> E[Execute repair]
+    E --> F{Repair successful?}
+    F -->|Yes| G[Set IN_SERVICE + close WO]
+    F -->|No| H[Retire/dispose workflow]
+    G --> I[Append audit event]
+    H --> I
+  end

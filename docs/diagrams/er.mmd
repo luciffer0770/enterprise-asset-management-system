@@ -1,0 +1,35 @@
+erDiagram
+  TENANT ||--o{ ORG_UNIT : has
+  TENANT ||--o{ USER : has
+  ORG_UNIT ||--o{ USER_ORG_UNIT : members
+  USER ||--o{ USER_ORG_UNIT : belongs
+
+  TENANT ||--o{ LOCATION : has
+  TENANT ||--o{ INVENTORY_POOL : has
+
+  ASSET_TYPE ||--o{ ASSET : classifies
+  TENANT ||--o{ ASSET : owns
+  ORG_UNIT ||--o{ ASSET : owns
+  LOCATION ||--o{ ASSET : stores
+  INVENTORY_POOL ||--o{ ASSET : pools
+
+  ASSET ||--o{ CHECKOUT : loaned_via
+  USER ||--o{ CHECKOUT : borrower
+
+  ASSET ||--o{ RESERVATION : reserved
+  USER ||--o{ RESERVATION : requestor
+
+  ASSET ||--o{ WORK_ORDER : serviced_by
+  WORK_ORDER ||--o{ WORK_ORDER_COST : has
+
+  ASSET ||--o{ CALIBRATION_EVENT : calibrated
+  CALIBRATION_EVENT ||--o{ ATTACHMENT : evidence
+
+  ASSET ||--o{ DEPRECIATION_BOOK : accounted_in
+  ASSET ||--o{ DISPOSAL_RECORD : disposed
+
+  TENANT ||--o{ AUDIT_LOG_EVENT : logs
+  USER ||--o{ AUDIT_LOG_EVENT : actor
+
+  INVENTORY_AUDIT ||--o{ INVENTORY_AUDIT_ITEM : includes
+  ASSET ||--o{ INVENTORY_AUDIT_ITEM : counted
