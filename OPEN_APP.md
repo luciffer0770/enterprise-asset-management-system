@@ -1,39 +1,43 @@
-# How to Open the Tooling Management App
+# How to Open the Tooling Management App (Cloud Workspace)
 
-## 1. Start the app
+## 1. Start the app (run from project folder: `/workspace`)
 
 ```bash
+cd /workspace
+npm install
+npm run db:migrate
+npm run db:seed
 npm run dev
 ```
 
-Wait until you see: `✓ Ready in ...` and `Local: http://localhost:3000`
+Wait until you see: `✓ Ready in ...` — check the output: **Local: http://localhost:3000** or **http://localhost:3001** (if 3000 is busy).
 
-## 2. Open in your browser
+## 2. Open in Cursor
 
-### Option A: Simple Browser (in Cursor)
-- Press `Ctrl+Shift+P` (or `Cmd+Shift+P` on Mac) → type **Simple Browser**
-- Enter: `http://localhost:3000`
-- Click **Open**
+### Ports panel (recommended)
+1. Open **Ports** tab (View → Ports, or Terminal panel → Ports)
+2. Find the port in the dev output (**3000** or **3001**)
+3. Click the **globe** icon or **Open in Browser** for that port
+4. This opens the public URL (e.g. `https://xxxx-3000.preview.app.github.dev` or similar)
 
-### Option B: Port forwarding
-- In Cursor, open **Ports** tab (or **Terminal** → **Ports**)
-- If port 3000 is not listed, click **Forward a Port** and add `3000`
-- Click the globe icon or **Open in Browser** next to port 3000
+### Simple Browser
+1. `Ctrl+Shift+P` (or `Cmd+Shift+P`) → type **Simple Browser**
+2. Enter: `http://localhost:3000` or `http://localhost:3001` (match the port from step 1)
 
-### Option C: Direct URL
-- If running locally: open **http://localhost:3000** in any browser
-- If in a cloud workspace: use the forwarded URL shown in the Ports panel (e.g. `https://*.app.cursor.com` or similar)
+## 3. Verify the app is running
 
-## 3. Log in
+Open: `/api/health` — you should see `{"ok":true,"message":"Industrial Tooling Management API is running",...}`
 
-- **Manual**: Enter `admin@demo.com` / `demo123` (or any demo user) and click **Sign in**
-- **Quick buttons**: Click **Admin**, **Mechanical**, **Electrical**, or **External** to sign in directly
+## 4. Log in
 
-## 4. Demo credentials
+- **Quick**: Click **Admin**, **Mechanical**, **Electrical**, or **External**
+- **Manual**: `admin@demo.com` / `demo123`
 
-| Role       | Email              | Password |
-| ---------- | ------------------ | -------- |
-| Admin      | admin@demo.com     | demo123  |
-| Mechanical | mechanical@demo.com| demo123  |
-| Electrical | electrical@demo.com| demo123  |
-| External   | external@demo.com  | demo123  |
+## 5. Demo credentials
+
+| Role       | Email               | Password |
+| ---------- | ------------------- | -------- |
+| Admin      | admin@demo.com      | demo123  |
+| Mechanical | mechanical@demo.com | demo123  |
+| Electrical | electrical@demo.com | demo123  |
+| External   | external@demo.com   | demo123  |

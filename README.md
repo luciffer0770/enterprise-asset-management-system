@@ -1,17 +1,26 @@
 # Industrial Tooling & Asset Management
 
-## Quick start
+## Quick start (cloud or local)
 
 ```bash
+cd /workspace   # or your project directory
 npm install
 npm run db:migrate
 npm run db:seed
 npm run dev
 ```
 
-Open **http://localhost:3000** and sign in with **admin@demo.com** / **demo123**.
+Or run the all-in-one script:
+```bash
+./run.sh
+```
 
-**In Cursor**: Use Simple Browser (`Ctrl+Shift+P` → "Simple Browser" → `http://localhost:3000`) or the Ports panel to open the forwarded URL. See [OPEN_APP.md](OPEN_APP.md) for details.
+Open the app:
+- **Ports panel**: Ports tab → Open in Browser for port 3000 (or 3001)
+- **Simple Browser**: `Ctrl+Shift+P` → "Simple Browser" → `http://localhost:3000`
+- **Health check**: `http://localhost:3000/api/health` (should return `{"ok":true,...}`)
+
+See [OPEN_APP.md](OPEN_APP.md) for detailed cloud workspace instructions.
 
 ## Demo login
 

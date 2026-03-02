@@ -8,10 +8,13 @@ export function LoginForm() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch("/api/auth/csrf")
+    fetch("/api/auth/csrf", { cache: "no-store" })
       .then((r) => r.json())
       .then((d) => setCsrfToken(d?.csrfToken ?? ""))
-      .catch(() => setError("Could not load form"));
+      .catch((e) => {
+        console.error("CSRF fetch failed:", e);
+        setError("Could not load form. Check that the app is running and you're using the correct URL.");
+      });
   }, []);
 
   if (error) {

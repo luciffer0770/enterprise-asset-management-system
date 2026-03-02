@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev -H 0.0.0.0",
+    "setup": "prisma generate && prisma migrate deploy && npx tsx prisma/seed.ts",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
