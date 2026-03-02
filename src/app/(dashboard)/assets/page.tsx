@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { prisma } from "@/lib/db";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -76,7 +77,9 @@ export default async function AssetsPage({
         )}
       </div>
 
-      <AssetFilters orgUnits={orgUnits} types={types} />
+      <Suspense fallback={<div className="h-10" />}>
+        <AssetFilters orgUnits={orgUnits} types={types} />
+      </Suspense>
 
       <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-0)] overflow-hidden">
         <AssetsTable assets={assets} canWrite={canWrite} />

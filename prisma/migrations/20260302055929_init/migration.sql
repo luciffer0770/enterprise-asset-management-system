@@ -16,15 +16,6 @@ CREATE TABLE "OrgUnit" (
 );
 
 -- CreateTable
-CREATE TABLE "UserOrgUnit" (
-    "id" TEXT NOT NULL PRIMARY KEY,
-    "userId" TEXT NOT NULL,
-    "orgUnitId" TEXT NOT NULL,
-    CONSTRAINT "UserOrgUnit_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT "UserOrgUnit_orgUnitId_fkey" FOREIGN KEY ("orgUnitId") REFERENCES "OrgUnit" ("id") ON DELETE CASCADE ON UPDATE CASCADE
-);
-
--- CreateTable
 CREATE TABLE "Location" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "tenantId" TEXT NOT NULL,
@@ -44,6 +35,16 @@ CREATE TABLE "InventoryPool" (
 );
 
 -- CreateTable
+CREATE TABLE "AssetType" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "tenantId" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "category" TEXT NOT NULL,
+    "requiresCalibration" BOOLEAN NOT NULL DEFAULT false,
+    CONSTRAINT "AssetType_tenantId_fkey" FOREIGN KEY ("tenantId") REFERENCES "Tenant" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+-- CreateTable
 CREATE TABLE "User" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "tenantId" TEXT NOT NULL,
@@ -58,13 +59,12 @@ CREATE TABLE "User" (
 );
 
 -- CreateTable
-CREATE TABLE "AssetType" (
+CREATE TABLE "UserOrgUnit" (
     "id" TEXT NOT NULL PRIMARY KEY,
-    "tenantId" TEXT NOT NULL,
-    "name" TEXT NOT NULL,
-    "category" TEXT NOT NULL,
-    "requiresCalibration" BOOLEAN NOT NULL DEFAULT false,
-    CONSTRAINT "AssetType_tenantId_fkey" FOREIGN KEY ("tenantId") REFERENCES "Tenant" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+    "userId" TEXT NOT NULL,
+    "orgUnitId" TEXT NOT NULL,
+    CONSTRAINT "UserOrgUnit_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT "UserOrgUnit_orgUnitId_fkey" FOREIGN KEY ("orgUnitId") REFERENCES "OrgUnit" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- CreateTable

@@ -16,8 +16,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" data-density={process.env.UI_DENSITY ?? "compact"}>
-      <body className={`${inter.variable} font-sans antialiased`}>
+    <html lang="en" data-density={process.env.UI_DENSITY ?? "compact"} suppressHydrationWarning>
+      <body className={`${inter.variable} font-sans antialiased`} suppressHydrationWarning>
         <Providers>{children}</Providers>
       </body>
     </html>

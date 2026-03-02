@@ -13,7 +13,7 @@ import {
   Package,
   ArrowRight,
 } from "lucide-react";
-import { hasCapability, canAccessOrgUnit } from "@/lib/permissions";
+import { hasCapability } from "@/lib/permissions";
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
