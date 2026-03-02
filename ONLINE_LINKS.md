@@ -6,7 +6,7 @@ Use these links to open and run the app in your browser. You can edit the code a
 
 ## Option 1: StackBlitz (recommended)
 
-**→ [Open in StackBlitz](https://stackblitz.com/fork/github/luciffer0770/enterprise-asset-management-system)**
+**→ [Open in StackBlitz](https://stackblitz.com/fork/github/luciffer0770/enterprise-asset-management-system/tree/cursor/industrial-tooling-management-1b99)**
 
 1. Click the link above.
 2. Wait for the project to load and dependencies to install.
@@ -22,6 +22,8 @@ Use these links to open and run the app in your browser. You can edit the code a
 ## Option 2: CodeSandbox
 
 **→ [Open in CodeSandbox](https://codesandbox.io/p/github/luciffer0770/enterprise-asset-management-system)**
+
+_Import the repo, then switch branch to `cursor/industrial-tooling-management-1b99` if needed._
 
 1. Click the link above.
 2. When the project loads, run in the terminal:
