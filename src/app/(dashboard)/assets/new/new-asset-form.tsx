@@ -31,11 +31,11 @@ export function NewAssetForm({
   const [assetTag, setAssetTag] = useState("");
   const [serialNumber, setSerialNumber] = useState("");
   const [assetTypeId, setAssetTypeId] = useState("");
-  const [ownerOrgUnitId, setOwnerOrgUnitId] = useState("");
-  const [locationId, setLocationId] = useState("");
+  const NONE = "__none__";
+  const [ownerOrgUnitId, setOwnerOrgUnitId] = useState(NONE);
   const [locationPath, setLocationPath] = useState("");
-  const [trolleyId, setTrolleyId] = useState("");
-  const [poolId, setPoolId] = useState("");
+  const [trolleyId, setTrolleyId] = useState(NONE);
+  const [poolId, setPoolId] = useState(NONE);
   const [purchaseCost, setPurchaseCost] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -54,11 +54,10 @@ export function NewAssetForm({
           assetTag,
           serialNumber: serialNumber || undefined,
           assetTypeId,
-          ownerOrgUnitId: ownerOrgUnitId || undefined,
-          locationId: locationId || undefined,
+          ownerOrgUnitId: ownerOrgUnitId === NONE ? undefined : ownerOrgUnitId,
           locationPath: locationPath || undefined,
-          trolleyId: trolleyId || undefined,
-          poolId: poolId || undefined,
+          trolleyId: trolleyId === NONE ? undefined : trolleyId,
+          poolId: poolId === NONE ? undefined : poolId,
           purchaseCost: purchaseCost ? parseFloat(purchaseCost) : undefined,
         }),
       });
@@ -119,7 +118,7 @@ export function NewAssetForm({
             <SelectValue placeholder="Optional" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">—</SelectItem>
+            <SelectItem value={NONE}>—</SelectItem>
             {orgUnits.map((ou) => (
               <SelectItem key={ou.id} value={ou.id}>
                 {ou.name}
@@ -143,7 +142,7 @@ export function NewAssetForm({
             <SelectValue placeholder="Optional" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">—</SelectItem>
+            <SelectItem value={NONE}>—</SelectItem>
             {trolleys.map((t) => (
               <SelectItem key={t.id} value={t.id}>
                 {t.trolleyCode} — {t.project.name}
@@ -159,7 +158,7 @@ export function NewAssetForm({
             <SelectValue placeholder="Optional" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">—</SelectItem>
+            <SelectItem value={NONE}>—</SelectItem>
             {pools.map((p) => (
               <SelectItem key={p.id} value={p.id}>
                 {p.name}
@@ -179,7 +178,7 @@ export function NewAssetForm({
         />
       </div>
       <Button type="submit" disabled={loading}>
-        Create Asset
+        Add Tool
       </Button>
     </form>
   );

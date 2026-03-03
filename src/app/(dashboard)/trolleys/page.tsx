@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 export default async function TrolleysPage() {
   const session = await getServerSession(authOptions);
   const role = (session?.user as { role?: string })?.role ?? "EXTERNAL";
-  if (!hasCapability(role, "assets:read")) {
+  if (!hasCapability(role, "trolleys")) {
     return (
       <div className="p-8 text-center text-[var(--text-2)]">
         You do not have permission to view trolleys.
@@ -25,9 +25,7 @@ export default async function TrolleysPage() {
   const trolleyWhere =
     role === "ADMIN" || role === "LAB_INCHARGE"
       ? { tenantId }
-      : role === "EXTERNAL"
-        ? { tenantId, assets: { some: { assignedUserId: userId } } }
-        : role === "MECHANICAL"
+      : role === "MECHANICAL"
           ? { tenantId, department: "Mechanical" }
           : role === "ELECTRICAL"
             ? { tenantId, department: "Electrical" }

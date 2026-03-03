@@ -6,7 +6,7 @@ import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { TicketQueue } from "./ticket-queue";
-import { TicketActions } from "./ticket-actions";
+import { IssueToolSection } from "./issue-tool-section";
 
 export default async function TicketsPage({
   searchParams,
@@ -27,11 +27,19 @@ export default async function TicketsPage({
   const statusFilter = params.status;
   const tenantId = (session?.user as { tenantId?: string })?.tenantId ?? "";
   const userId = (session?.user as { id?: string })?.id ?? "";
+  const orgUnitIds = (session?.user as { orgUnitIds?: string[] })?.orgUnitIds ?? [];
 
   const now = new Date();
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
-  const [activeCheckouts, pendingTicketsList, overdueCheckouts, ticketsClosedToday, allCheckouts] =
+  const assetWhere =
+    role === "ADMIN" || role === "LAB_INCHARGE"
+      ? { tenantId }
+      : role === "EXTERNAL"
+        ? { tenantId, assignedUserId: userId }
+        : { tenantId, ownerOrgUnitId: { in: orgUnitIds.length ? orgUnitIds : ["__none__"] } };
+
+  const [activeCheckouts, pendingTicketsList, overdueCheckouts, ticketsClosedToday, allCheckouts, availableAssets] =
     await Promise.all([
       prisma.checkout.count({ where: { returnedAt: null, asset: { tenantId } } }),
       prisma.returnTicket.findMany({
@@ -70,6 +78,11 @@ export default async function TicketsPage({
         orderBy: { checkedOutAt: "desc" },
         take: 100,
       }),
+      prisma.asset.findMany({
+        where: { ...assetWhere, lifecycleState: "IN_SERVICE" },
+        include: { assetType: true },
+        take: 200,
+      }),
     ]);
 
   const pendingTickets = pendingTicketsList.length;
@@ -85,10 +98,14 @@ export default async function TicketsPage({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <h1 className="text-2xl font-semibold">Ticket Management</h1>
-        {canCheckout && <TicketActions />}
-      </div>
+      <h1 className="text-2xl font-semibold">Ticket Management</h1>
+
+      {canCheckout && (
+        <IssueToolSection
+          availableAssets={availableAssets}
+          tenantId={tenantId}
+        />
+      )}
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {kpis.map((k) => (
@@ -108,6 +125,7 @@ export default async function TicketsPage({
         pendingTickets={pendingTicketsList}
         statusFilter={statusFilter}
         canApprove={canApprove}
+        canReturn={canCheckout}
       />
     </div>
   );

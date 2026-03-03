@@ -14,6 +14,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { hasCapability } from "@/lib/permissions";
+import { DashboardCharts } from "./dashboard-charts";
 
 export default async function DashboardPage() {
   let session;
@@ -37,8 +38,10 @@ export default async function DashboardPage() {
         : { tenantId, ownerOrgUnitId: { in: orgUnitIds.length ? orgUnitIds : ["__none__"] } };
 
   let overdueCount: number, reservationsToday: number, woBacklog: number, calibrationOverdue: number, assetCount: number;
+  let statusCounts: { status: string; count: number }[];
+  let ticketCounts: { name: string; value: number }[];
   try {
-    [overdueCount, reservationsToday, woBacklog, calibrationOverdue, assetCount] =
+    const [overdue, resToday, wo, calOverdue, count, assetsForChart, checkouts, pendingTickets] =
     await Promise.all([
       prisma.checkout.count({
         where: {
@@ -65,7 +68,31 @@ export default async function DashboardPage() {
         events.filter((e) => e.nextDueDate && e.nextDueDate < new Date()).length
       ),
       prisma.asset.count({ where: assetWhere }),
+      prisma.asset.findMany({
+        where: assetWhere,
+        select: { lifecycleState: true },
+        take: 5000,
+      }),
+      prisma.checkout.count({ where: { returnedAt: null, asset: assetWhere } }),
+      prisma.returnTicket.count({
+        where: { status: "PENDING_APPROVAL", checkout: { asset: assetWhere } },
+      }),
     ]);
+    overdueCount = overdue;
+    reservationsToday = resToday;
+    woBacklog = wo;
+    calibrationOverdue = calOverdue;
+    assetCount = count;
+    const statusMap = new Map<string, number>();
+    for (const a of assetsForChart) {
+      statusMap.set(a.lifecycleState, (statusMap.get(a.lifecycleState) ?? 0) + 1);
+    }
+    statusCounts = Array.from(statusMap.entries()).map(([status, count]) => ({ status, count }));
+    ticketCounts = [
+      { name: "Active", value: checkouts },
+      { name: "Pending Approval", value: pendingTickets },
+    ].filter((d) => d.value > 0);
+    if (ticketCounts.length === 0) ticketCounts = [{ name: "No tickets", value: 1 }];
   } catch (e) {
     console.error("Dashboard data fetch error:", e);
     throw new Error("Unable to load dashboard. Ensure npm run setup was run.");
@@ -78,7 +105,7 @@ export default async function DashboardPage() {
       value: overdueCount,
       trend: "+0",
       icon: ClipboardCheck,
-      href: "/checkout?filter=overdue",
+      href: "/tickets?status=overdue",
       cap: "checkout" as const,
     },
     {
@@ -151,6 +178,10 @@ export default async function DashboardPage() {
             </Card>
           ))}
       </div>
+
+      {hasCapability(role, "assets:read") && (
+        <DashboardCharts statusCounts={statusCounts} ticketCounts={ticketCounts} />
+      )}
     </div>
   );
 }

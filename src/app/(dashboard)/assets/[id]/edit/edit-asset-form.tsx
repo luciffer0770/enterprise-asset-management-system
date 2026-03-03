@@ -32,7 +32,8 @@ export function EditAssetForm({
   const router = useRouter();
   const [condition, setCondition] = useState(asset.condition);
   const [locationPath, setLocationPath] = useState(asset.locationPath ?? "");
-  const [trolleyId, setTrolleyId] = useState(asset.trolleyId ?? "");
+  const NONE = "__none__";
+  const [trolleyId, setTrolleyId] = useState(asset.trolleyId ?? NONE);
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -45,7 +46,7 @@ export function EditAssetForm({
         body: JSON.stringify({
           condition,
           locationPath: locationPath || null,
-          trolleyId: trolleyId || null,
+          trolleyId: trolleyId === NONE ? null : trolleyId,
         }),
       });
       if (!res.ok) {
@@ -95,7 +96,7 @@ export function EditAssetForm({
             <SelectValue placeholder="Optional" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">—</SelectItem>
+            <SelectItem value={NONE}>—</SelectItem>
             {trolleys.map((t) => (
               <SelectItem key={t.id} value={t.id}>
                 {t.trolleyCode} — {t.project.name}

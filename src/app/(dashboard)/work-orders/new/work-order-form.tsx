@@ -24,12 +24,13 @@ export function WorkOrderForm({
   users: User[];
 }) {
   const router = useRouter();
+  const NONE = "__none__";
   const [assetId, setAssetId] = useState(initialAsset?.id ?? "");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [type, setType] = useState("corrective");
   const [priority, setPriority] = useState("NORMAL");
-  const [assignedToId, setAssignedToId] = useState("");
+  const [assignedToId, setAssignedToId] = useState(NONE);
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -49,7 +50,7 @@ export function WorkOrderForm({
           description,
           type,
           priority,
-          assignedToId: assignedToId || undefined,
+          assignedToId: assignedToId === NONE ? undefined : assignedToId,
         }),
       });
       if (!res.ok) {
@@ -136,7 +137,7 @@ export function WorkOrderForm({
             <SelectValue placeholder="Optional" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">—</SelectItem>
+            <SelectItem value={NONE}>—</SelectItem>
             {users.map((u) => (
               <SelectItem key={u.id} value={u.id}>
                 {u.displayName}

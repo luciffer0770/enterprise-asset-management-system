@@ -30,7 +30,7 @@ export default async function AuditLogsPage({
   };
   if (params.entityType) where.entityType = params.entityType;
   if (params.action) where.action = params.action;
-  if (role === "EXTERNAL") where.actorUserId = userId;
+  // Admin only - EXTERNAL and others don't have audit:read
 
   const events = await prisma.auditLogEvent.findMany({
     where,

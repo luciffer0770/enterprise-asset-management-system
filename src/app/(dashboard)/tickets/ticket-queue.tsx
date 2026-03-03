@@ -34,15 +34,38 @@ type Props = {
   }>;
   statusFilter?: string;
   canApprove: boolean;
+  canReturn?: boolean;
 };
 
-export function TicketQueue({ checkouts, pendingTickets, statusFilter, canApprove }: Props) {
+export function TicketQueue({ checkouts, pendingTickets, statusFilter, canApprove, canReturn }: Props) {
   const router = useRouter();
   const [approvalTicket, setApprovalTicket] = useState<{ id: string; assetTag: string } | null>(null);
   const [decision, setDecision] = useState<"APPROVE" | "REJECT">("APPROVE");
   const [notes, setNotes] = useState("");
   const [assetState, setAssetState] = useState<"IN_SERVICE" | "UNDER_MAINTENANCE" | "QUARANTINED">("IN_SERVICE");
   const [loading, setLoading] = useState(false);
+  const [returningId, setReturningId] = useState<string | null>(null);
+
+  async function handleReturn(assetId: string) {
+    setReturningId(assetId);
+    try {
+      const res = await fetch("/api/checkout/return", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ assetId }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        alert(err.message ?? "Return failed");
+        return;
+      }
+      router.refresh();
+    } catch {
+      alert("Return failed");
+    } finally {
+      setReturningId(null);
+    }
+  }
 
   async function handleApprove() {
     if (!approvalTicket) return;
@@ -107,9 +130,9 @@ export function TicketQueue({ checkouts, pendingTickets, statusFilter, canApprov
               ))}
             </div>
           ) : statusFilter === "overdue" ? (
-            <CheckoutList checkouts={checkouts.filter((c) => c.dueDate && c.dueDate < now && !c.returnedAt)} />
+            <CheckoutList checkouts={checkouts.filter((c) => c.dueDate && c.dueDate < now && !c.returnedAt)} canReturn={canReturn} onReturn={handleReturn} returningId={returningId} />
           ) : statusFilter === "active" ? (
-            <CheckoutList checkouts={checkouts.filter((c) => !c.returnedAt)} />
+            <CheckoutList checkouts={checkouts.filter((c) => !c.returnedAt)} canReturn={canReturn} onReturn={handleReturn} returningId={returningId} />
           ) : (
             <div className="space-y-4">
               {pendingTickets.length > 0 && (
@@ -120,7 +143,7 @@ export function TicketQueue({ checkouts, pendingTickets, statusFilter, canApprov
               )}
               <div>
                 <h3 className="font-medium mb-2">Active Checkouts</h3>
-                <CheckoutList checkouts={checkouts.filter((c) => !c.returnedAt)} compact />
+                <CheckoutList checkouts={checkouts.filter((c) => !c.returnedAt)} compact canReturn={canReturn} onReturn={handleReturn} returningId={returningId} />
               </div>
             </div>
           )}
@@ -199,9 +222,15 @@ export function TicketQueue({ checkouts, pendingTickets, statusFilter, canApprov
 function CheckoutList({
   checkouts,
   compact,
+  canReturn,
+  onReturn,
+  returningId,
 }: {
   checkouts: Checkout[];
   compact?: boolean;
+  canReturn?: boolean;
+  onReturn?: (assetId: string) => void;
+  returningId?: string | null;
 }) {
   return (
     <div className="space-y-2">
@@ -223,9 +252,21 @@ function CheckoutList({
               )}
             </span>
           </div>
-          {c.returnTicket && (
-            <Badge variant="neutral">{c.returnTicket.status}</Badge>
-          )}
+          <div className="flex items-center gap-2">
+            {c.returnTicket && (
+              <Badge variant="neutral">{c.returnTicket.status}</Badge>
+            )}
+            {!c.returnedAt && !c.returnTicket && canReturn && onReturn && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => onReturn(c.asset.id)}
+                disabled={returningId === c.asset.id}
+              >
+                {returningId === c.asset.id ? "Returning…" : "Return"}
+              </Button>
+            )}
+          </div>
         </div>
       ))}
     </div>

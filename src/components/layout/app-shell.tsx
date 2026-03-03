@@ -26,7 +26,7 @@ import type { Role } from "@/lib/utils";
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, cap: "assets:read" as const },
   { href: "/assets", label: "Tools", icon: Package, cap: "assets:read" as const },
-  { href: "/trolleys", label: "Trolleys", icon: ShoppingCart, cap: "assets:read" as const },
+  { href: "/trolleys", label: "Trolleys", icon: ShoppingCart, cap: "trolleys" as const },
   { href: "/tickets", label: "Tickets", icon: Ticket, cap: "checkout" as const },
   { href: "/reservations", label: "Reservations", icon: Calendar, cap: "reservations" as const },
   { href: "/work-orders", label: "Work Orders", icon: Wrench, cap: "workorders:read" as const },
@@ -122,7 +122,7 @@ export function AppShell({
       <main className="flex-1 flex flex-col md:ml-56 min-h-screen">
         {/* Bosch-style supergraphic band */}
         <div
-          className="h-1 w-full shrink-0"
+          className="h-2 w-full shrink-0"
           style={{
             background: "linear-gradient(90deg, var(--brand-red) 0%, var(--brand-dark-blue) 25%, var(--brand-light-blue) 50%, var(--brand-turquoise) 75%, var(--brand-light-green) 100%)",
           }}
