@@ -78,16 +78,17 @@ model Project {
 }
 
 model Trolley {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   tenantId    String
-  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant      Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   projectId   String
-  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  trolleyCode String   // e.g. TR-001
-  department  String   // Mechanical, Electrical
-  status      String   @default("ACTIVE") // ACTIVE, INACTIVE
-  createdAt   DateTime @default(now())
+  project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  trolleyCode String    // e.g. TR-001
+  department  String    // Mechanical, Electrical
+  status      String    @default("ACTIVE") // ACTIVE, INACTIVE
+  createdAt   DateTime  @default(now())
   assets      Asset[]
+  checkouts   Checkout[]
   @@unique([tenantId, trolleyCode])
 }
 
@@ -172,19 +173,24 @@ model Asset {
 // ============ CHECKOUT / CUSTODY ============
 
 model Checkout {
-  id             String    @id @default(cuid())
-  assetId        String
-  asset          Asset     @relation(fields: [assetId], references: [id], onDelete: Cascade)
-  borrowerId     String
-  borrower       User      @relation(fields: [borrowerId], references: [id])
-  checkedOutAt   DateTime  @default(now())
-  dueDate        DateTime?
-  returnedAt     DateTime?
-  conditionOut   String?
-  conditionIn    String?
-  notes          String?
-  returnTicket   ReturnTicket?
-  createdAt      DateTime  @default(now())
+  id               String    @id @default(cuid())
+  assetId          String
+  asset            Asset     @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  borrowerId       String
+  borrower         User      @relation(fields: [borrowerId], references: [id])
+  borrowerName     String?   // name at issue time
+  borrowerEmpId    String?   // emp id at issue time
+  reason           String?   // reason for issue
+  trolleyId        String?
+  trolley          Trolley?  @relation(fields: [trolleyId], references: [id])
+  checkedOutAt     DateTime  @default(now())
+  dueDate          DateTime?
+  returnedAt       DateTime?
+  conditionOut     String?
+  conditionIn      String?
+  notes            String?
+  returnTicket     ReturnTicket?
+  createdAt        DateTime  @default(now())
 }
 
 model ReturnTicket {

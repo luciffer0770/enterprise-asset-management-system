@@ -10,6 +10,10 @@ const schema = z.object({
   assetId: z.string(),
   borrowerEmail: z.string().email().optional(),
   dueDate: z.string().optional(),
+  borrowerName: z.string().optional(),
+  borrowerEmpId: z.string().optional(),
+  reason: z.string().optional(),
+  trolleyId: z.string().optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -28,7 +32,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ message: "Invalid input" }, { status: 400 });
   }
 
-  const { assetId, borrowerEmail, dueDate } = parsed.data;
+  const { assetId, borrowerEmail, dueDate, borrowerName, borrowerEmpId, reason, trolleyId } = parsed.data;
   const userId = (session.user as { id?: string }).id ?? session.user.email ?? "";
   const tenantId = (session.user as { tenantId?: string }).tenantId ?? "";
 
@@ -61,6 +65,10 @@ export async function POST(req: NextRequest) {
       data: {
         assetId,
         borrowerId,
+        borrowerName: borrowerName ?? undefined,
+        borrowerEmpId: borrowerEmpId ?? undefined,
+        reason: reason ?? undefined,
+        trolleyId: trolleyId ?? undefined,
         dueDate: dueDate ? new Date(dueDate) : null,
         conditionOut: "GOOD",
       },

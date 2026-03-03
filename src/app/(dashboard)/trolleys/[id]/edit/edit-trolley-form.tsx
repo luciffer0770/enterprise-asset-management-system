@@ -1,0 +1,101 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+export function EditTrolleyForm({
+  trolley,
+  projects,
+}: {
+  trolley: { id: string; trolleyCode: string; projectId: string; department: string; status: string };
+  projects: { id: string; name: string }[];
+}) {
+  const router = useRouter();
+  const [projectId, setProjectId] = useState(trolley.projectId);
+  const [department, setDepartment] = useState(trolley.department);
+  const [status, setStatus] = useState(trolley.status);
+  const [loading, setLoading] = useState(false);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/trolleys/${trolley.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ projectId, department, status }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        alert(err.message ?? "Failed");
+        return;
+      }
+      router.push(`/trolleys/${trolley.id}`);
+      router.refresh();
+    } catch {
+      alert("Failed");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <Label>Trolley Code</Label>
+        <p className="font-medium mt-1">{trolley.trolleyCode}</p>
+      </div>
+      <div>
+        <Label>Project</Label>
+        <Select value={projectId} onValueChange={setProjectId}>
+          <SelectTrigger className="mt-1">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {projects.map((p) => (
+              <SelectItem key={p.id} value={p.id}>
+                {p.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div>
+        <Label>Department</Label>
+        <Select value={department} onValueChange={setDepartment}>
+          <SelectTrigger className="mt-1">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="Mechanical">Mechanical</SelectItem>
+            <SelectItem value="Electrical">Electrical</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div>
+        <Label>Status</Label>
+        <Select value={status} onValueChange={setStatus}>
+          <SelectTrigger className="mt-1">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="ACTIVE">Active</SelectItem>
+            <SelectItem value="INACTIVE">Inactive</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <Button type="submit" disabled={loading}>
+        Save
+      </Button>
+    </form>
+  );
+}

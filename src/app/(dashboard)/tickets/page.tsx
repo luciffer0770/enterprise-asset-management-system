@@ -39,7 +39,7 @@ export default async function TicketsPage({
         ? { tenantId, assignedUserId: userId }
         : { tenantId, ownerOrgUnitId: { in: orgUnitIds.length ? orgUnitIds : ["__none__"] } };
 
-  const [activeCheckouts, pendingTicketsList, overdueCheckouts, ticketsClosedToday, allCheckouts, availableAssets] =
+  const [activeCheckouts, pendingTicketsList, overdueCheckouts, ticketsClosedToday, allCheckouts, availableAssets, trolleys] =
     await Promise.all([
       prisma.checkout.count({ where: { returnedAt: null, asset: { tenantId } } }),
       prisma.returnTicket.findMany({
@@ -83,6 +83,11 @@ export default async function TicketsPage({
         include: { assetType: true },
         take: 200,
       }),
+      prisma.trolley.findMany({
+        where: { tenantId },
+        include: { project: true },
+        orderBy: { trolleyCode: "asc" },
+      }),
     ]);
 
   const pendingTickets = pendingTicketsList.length;
@@ -103,7 +108,8 @@ export default async function TicketsPage({
       {canCheckout && (
         <IssueToolSection
           availableAssets={availableAssets}
-          tenantId={tenantId}
+          trolleys={trolleys}
+          role={role}
         />
       )}
 

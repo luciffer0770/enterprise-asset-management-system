@@ -6,23 +6,33 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Asset, AssetType } from "@prisma/client";
+import type { Trolley } from "@prisma/client";
 
 export function IssueToolSection({
   availableAssets,
-  tenantId,
+  trolleys,
+  role,
   onIssue,
 }: {
   availableAssets: (Asset & { assetType: AssetType })[];
-  tenantId: string;
+  trolleys: (Trolley & { project: { name: string } })[];
+  role: string;
   onIssue?: () => void;
 }) {
   const router = useRouter();
+  const NONE = "__none__";
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<(Asset & { assetType: AssetType }) | null>(null);
-  const [borrowerEmail, setBorrowerEmail] = useState("");
+  const [borrowerName, setBorrowerName] = useState("");
+  const [borrowerEmpId, setBorrowerEmpId] = useState("");
+  const [reason, setReason] = useState("");
+  const [trolleyId, setTrolleyId] = useState(NONE);
   const [dueDate, setDueDate] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const isMechOrElec = role === "MECHANICAL" || role === "ELECTRICAL";
 
   const filtered = query.trim()
     ? availableAssets.filter(
@@ -35,6 +45,10 @@ export function IssueToolSection({
   async function handleIssue(e: React.FormEvent) {
     e.preventDefault();
     if (!selected) return;
+    if (!borrowerName.trim() || !borrowerEmpId.trim() || !reason.trim()) {
+      alert("Name, Employee ID, and Reason are required");
+      return;
+    }
     setLoading(true);
     try {
       const res = await fetch("/api/checkout", {
@@ -42,7 +56,10 @@ export function IssueToolSection({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           assetId: selected.id,
-          borrowerEmail: borrowerEmail || undefined,
+          borrowerName: borrowerName.trim(),
+          borrowerEmpId: borrowerEmpId.trim(),
+          reason: reason.trim(),
+          trolleyId: trolleyId === NONE ? undefined : trolleyId,
           dueDate: dueDate || undefined,
         }),
       });
@@ -53,7 +70,10 @@ export function IssueToolSection({
       }
       setSelected(null);
       setQuery("");
-      setBorrowerEmail("");
+      setBorrowerName("");
+      setBorrowerEmpId("");
+      setReason("");
+      setTrolleyId(NONE);
       setDueDate("");
       onIssue?.();
       router.refresh();
@@ -127,16 +147,56 @@ export function IssueToolSection({
               Issuing: {selected.assetTag} ({selected.assetType.name})
             </p>
             <div>
-              <Label htmlFor="borrower">Borrower email (optional)</Label>
+              <Label htmlFor="name">Name *</Label>
               <Input
-                id="borrower"
-                type="email"
-                value={borrowerEmail}
-                onChange={(e) => setBorrowerEmail(e.target.value)}
-                placeholder="user@example.com"
+                id="name"
+                value={borrowerName}
+                onChange={(e) => setBorrowerName(e.target.value)}
+                placeholder="Full name"
                 className="mt-1"
+                required
               />
             </div>
+            <div>
+              <Label htmlFor="empid">Employee ID *</Label>
+              <Input
+                id="empid"
+                value={borrowerEmpId}
+                onChange={(e) => setBorrowerEmpId(e.target.value)}
+                placeholder="Emp ID"
+                className="mt-1"
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="reason">Reason *</Label>
+              <Input
+                id="reason"
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                placeholder={isMechOrElec ? "Reason (if no trolley, mention here)" : "Reason for issue"}
+                className="mt-1"
+                required
+              />
+            </div>
+            {isMechOrElec && (
+              <div>
+                <Label>Trolley (if applicable)</Label>
+                <Select value={trolleyId} onValueChange={setTrolleyId}>
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="None / mention in reason" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={NONE}>Not applicable</SelectItem>
+                    {trolleys.map((t) => (
+                      <SelectItem key={t.id} value={t.id}>
+                        {t.trolleyCode} — {t.project.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
             <div>
               <Label htmlFor="due">Due date (optional)</Label>
               <Input

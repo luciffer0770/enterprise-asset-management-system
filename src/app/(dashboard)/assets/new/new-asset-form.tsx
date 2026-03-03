@@ -12,19 +12,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { AssetType, OrgUnit, Location, InventoryPool, Trolley } from "@prisma/client";
+import type { AssetType, OrgUnit, Location, Trolley } from "@prisma/client";
 
 export function NewAssetForm({
   types,
   orgUnits,
   locations,
-  pools,
   trolleys,
 }: {
   types: AssetType[];
   orgUnits: OrgUnit[];
   locations: Location[];
-  pools: InventoryPool[];
   trolleys: (Trolley & { project: { name: string } })[];
 }) {
   const router = useRouter();
@@ -35,7 +33,6 @@ export function NewAssetForm({
   const [ownerOrgUnitId, setOwnerOrgUnitId] = useState(NONE);
   const [locationPath, setLocationPath] = useState("");
   const [trolleyId, setTrolleyId] = useState(NONE);
-  const [poolId, setPoolId] = useState(NONE);
   const [purchaseCost, setPurchaseCost] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -57,7 +54,6 @@ export function NewAssetForm({
           ownerOrgUnitId: ownerOrgUnitId === NONE ? undefined : ownerOrgUnitId,
           locationPath: locationPath || undefined,
           trolleyId: trolleyId === NONE ? undefined : trolleyId,
-          poolId: poolId === NONE ? undefined : poolId,
           purchaseCost: purchaseCost ? parseFloat(purchaseCost) : undefined,
         }),
       });
@@ -146,22 +142,6 @@ export function NewAssetForm({
             {trolleys.map((t) => (
               <SelectItem key={t.id} value={t.id}>
                 {t.trolleyCode} — {t.project.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-      <div>
-        <Label>Pool</Label>
-        <Select value={poolId} onValueChange={setPoolId}>
-          <SelectTrigger>
-            <SelectValue placeholder="Optional" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={NONE}>—</SelectItem>
-            {pools.map((p) => (
-              <SelectItem key={p.id} value={p.id}>
-                {p.name}
               </SelectItem>
             ))}
           </SelectContent>
