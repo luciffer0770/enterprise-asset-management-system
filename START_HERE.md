@@ -1,31 +1,39 @@
-# Start the Tooling App – Copy & Run This
+# Run the Tool in Cursor Cloud (No Third-Party Sites)
 
-## Step 1: In the terminal, run (from the project folder):
+The app runs in this workspace. Use only Cursor's built-in viewer.
 
+## Step 1: Start the server
+
+In the terminal:
 ```bash
-cd /workspace && npm install && npm run db:migrate && npm run db:seed && npm run dev
+cd /workspace
+npm run setup
+npm run dev
 ```
 
-Wait until you see: **✓ Ready** and a line like **Local: http://localhost:3000**
+Wait until you see **✓ Ready**.
 
-## Step 2: Open the app
+## Step 2: Open in Cursor
 
-### In Cursor
-1. Open the **Ports** tab (View → Ports, or click "Ports" in the bottom panel).
-2. Find port **3000** (or 3001 if 3000 was busy).
-3. Click the **globe icon** or **"Open in Browser"** next to that port.
+### Option A: Simple Browser (try this first)
 
-### If Ports doesn’t work
-1. Press **Ctrl+Shift+P** (Mac: Cmd+Shift+P).
-2. Type **Simple Browser**.
-3. Press Enter.
-4. Enter: `http://localhost:3000` (or 3001) and press Enter.
+1. Press **Ctrl+Shift+P** (Mac: **Cmd+Shift+P**)
+2. Type **Simple Browser**
+3. Choose **Simple Browser: Show**
+4. Enter: `http://localhost:3000`
+5. Press Enter
+
+### Option B: Ports panel
+
+1. Open **Ports** tab (bottom panel)
+2. Find port **3000** (or 3001)
+3. Click the **globe** or **Open in Browser**
 
 ## Step 3: Log in
 
-- Click one of the buttons: **Admin**, **Mechanical**, **Electrical**, or **External**
-- Or enter: `admin@demo.com` / `demo123`
+- Click **Admin**, **Mechanical**, **Electrical**, or **External**
+- Or: `admin@demo.com` / `demo123`
 
 ---
 
-**Check the server is running:** Open `/api/health` – you should see `{"ok":true,...}`.
+**If "request could not be routed" appears:** Try Simple Browser with `http://localhost:3000` first. If Ports fails, Simple Browser may work.

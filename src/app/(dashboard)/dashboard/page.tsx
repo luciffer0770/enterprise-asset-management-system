@@ -16,7 +16,13 @@ import {
 import { hasCapability } from "@/lib/permissions";
 
 export default async function DashboardPage() {
-  const session = await getServerSession(authOptions);
+  let session;
+  try {
+    session = await getServerSession(authOptions);
+  } catch (e) {
+    console.error("Dashboard getServerSession error:", e);
+    throw new Error("Unable to verify session. Try logging in again.");
+  }
   const role = (session?.user as { role?: string })?.role ?? "EXTERNAL";
   const tenantId = (session?.user as { tenantId?: string })?.tenantId ?? "";
   const orgUnitIds = (session?.user as { orgUnitIds?: string[] })?.orgUnitIds ?? [];
@@ -30,7 +36,9 @@ export default async function DashboardPage() {
         ? { tenantId, assignedUserId: userId }
         : { tenantId, ownerOrgUnitId: { in: orgUnitIds } };
 
-  const [overdueCount, reservationsToday, woBacklog, calibrationOverdue, assetCount] =
+  let overdueCount: number, reservationsToday: number, woBacklog: number, calibrationOverdue: number, assetCount: number;
+  try {
+    [overdueCount, reservationsToday, woBacklog, calibrationOverdue, assetCount] =
     await Promise.all([
       prisma.checkout.count({
         where: {
@@ -58,6 +66,10 @@ export default async function DashboardPage() {
       ),
       prisma.asset.count({ where: assetWhere }),
     ]);
+  } catch (e) {
+    console.error("Dashboard data fetch error:", e);
+    throw new Error("Unable to load dashboard. Ensure npm run setup was run.");
+  }
 
   const widgets = [
     {
