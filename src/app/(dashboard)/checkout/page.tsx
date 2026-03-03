@@ -33,7 +33,7 @@ export default async function CheckoutPage({
       ? { tenantId }
       : role === "EXTERNAL"
         ? { tenantId, assignedUserId: userId }
-        : { tenantId, ownerOrgUnitId: { in: orgUnitIds } };
+        : { tenantId, ownerOrgUnitId: { in: orgUnitIds.length ? orgUnitIds : ["__none__"] } };
 
   const asset = assetId
     ? await prisma.asset.findFirst({

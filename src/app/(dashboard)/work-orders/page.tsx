@@ -20,11 +20,14 @@ export default async function WorkOrdersPage() {
 
   const tenantId = (session?.user as { tenantId?: string })?.tenantId ?? "";
   const orgUnitIds = (session?.user as { orgUnitIds?: string[] })?.orgUnitIds ?? [];
+  const userId = (session?.user as { id?: string })?.id ?? "";
 
   const assetWhere =
     role === "ADMIN"
       ? { tenantId }
-      : { tenantId, ownerOrgUnitId: { in: orgUnitIds } };
+      : role === "EXTERNAL"
+        ? { tenantId, assignedUserId: userId }
+        : { tenantId, ownerOrgUnitId: { in: orgUnitIds.length ? orgUnitIds : ["__none__"] } };
 
   const workOrders = await prisma.workOrder.findMany({
     where: { asset: assetWhere },

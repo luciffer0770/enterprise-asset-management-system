@@ -24,7 +24,7 @@ export default async function CalibrationPage() {
       ? { tenantId }
       : role === "EXTERNAL"
         ? { tenantId, assignedUserId: userId }
-        : { tenantId, ownerOrgUnitId: { in: orgUnitIds } };
+        : { tenantId, ownerOrgUnitId: { in: orgUnitIds.length ? orgUnitIds : ["__none__"] } };
 
   const calibrations = await prisma.calibrationEvent.findMany({
     where: { asset: assetWhere },

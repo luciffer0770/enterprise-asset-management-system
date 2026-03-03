@@ -1,9 +1,13 @@
 {
-  "forwardPorts": [3000],
+  "forwardPorts": [3000, 3001],
   "portsAttributes": {
     "3000": {
       "label": "Tooling App",
       "onAutoForward": "openBrowser"
+    },
+    "3001": {
+      "label": "Tooling App (fallback)",
+      "onAutoForward": "notify"
     }
   }
 }

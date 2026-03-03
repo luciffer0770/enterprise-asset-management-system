@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
       ? { tenantId }
       : role === "EXTERNAL"
         ? { tenantId, assignedUserId: userId }
-        : { tenantId, ownerOrgUnitId: { in: orgUnitIds } };
+        : { tenantId, ownerOrgUnitId: { in: orgUnitIds.length ? orgUnitIds : ["__none__"] } };
 
   const assets = await prisma.asset.findMany({
     where: {

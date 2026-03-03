@@ -31,13 +31,15 @@ export default async function AssetsPage({
       ? { tenantId }
       : role === "EXTERNAL"
         ? { tenantId, assignedUserId: userId }
-        : { tenantId, ownerOrgUnitId: { in: orgUnitIds } };
+        : { tenantId, ownerOrgUnitId: { in: orgUnitIds.length ? orgUnitIds : ["__none__"] } };
+
+  const safeOrgUnit = orgUnit && (role === "ADMIN" || orgUnitIds.includes(orgUnit)) ? orgUnit : undefined;
 
   const where = {
     ...baseWhere,
     ...(status && { lifecycleState: status }),
     ...(type && { assetType: { category: type } }),
-    ...(orgUnit && { ownerOrgUnitId: orgUnit }),
+    ...(safeOrgUnit && { ownerOrgUnitId: safeOrgUnit }),
     ...(search && {
       OR: [
         { assetTag: { contains: search } },

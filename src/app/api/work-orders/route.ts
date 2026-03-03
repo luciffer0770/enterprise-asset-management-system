@@ -35,10 +35,13 @@ export async function POST(req: NextRequest) {
   const userId = (session.user as { id?: string })?.id ?? "";
   const orgUnitIds = (session.user as { orgUnitIds?: string[] })?.orgUnitIds ?? [];
 
+  const userRole = (session.user as { role?: string }).role ?? "EXTERNAL";
   const assetWhere =
-    (session.user as { role?: string }).role === "ADMIN"
+    userRole === "ADMIN"
       ? { id: assetId, tenantId }
-      : { id: assetId, tenantId, ownerOrgUnitId: { in: orgUnitIds } };
+      : userRole === "EXTERNAL"
+        ? { id: assetId, tenantId, assignedUserId: userId }
+        : { id: assetId, tenantId, ownerOrgUnitId: { in: orgUnitIds.length ? orgUnitIds : ["__none__"] } };
 
   const asset = await prisma.asset.findFirst({
     where: assetWhere,

@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -10,5 +11,9 @@ export default async function LoginPage() {
   if (session?.user) {
     redirect("/dashboard");
   }
-  return <LoginForm />;
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-[var(--text-2)]">Loading…</div>}>
+      <LoginForm />
+    </Suspense>
+  );
 }

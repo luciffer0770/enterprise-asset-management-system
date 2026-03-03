@@ -34,7 +34,7 @@ export default async function DashboardPage() {
       ? { tenantId }
       : role === "EXTERNAL"
         ? { tenantId, assignedUserId: userId }
-        : { tenantId, ownerOrgUnitId: { in: orgUnitIds } };
+        : { tenantId, ownerOrgUnitId: { in: orgUnitIds.length ? orgUnitIds : ["__none__"] } };
 
   let overdueCount: number, reservationsToday: number, woBacklog: number, calibrationOverdue: number, assetCount: number;
   try {

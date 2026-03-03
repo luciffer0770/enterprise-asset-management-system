@@ -1,11 +1,21 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { TENANT_NAME } from "@/lib/utils";
 
+const ERROR_MESSAGES: Record<string, string> = {
+  CredentialsSignin: "Invalid email or password.",
+  Default: "Sign in failed. Please try again.",
+};
+
 export function LoginForm() {
+  const searchParams = useSearchParams();
   const [csrfToken, setCsrfToken] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const authError = searchParams.get("error");
+  const authErrorMsg = authError ? (ERROR_MESSAGES[authError] ?? ERROR_MESSAGES.Default) : null;
 
   useEffect(() => {
     fetch("/api/auth/csrf", { cache: "no-store" })
@@ -38,6 +48,9 @@ export function LoginForm() {
         <div className="h-1 w-16 bg-[var(--brand-red)] rounded-full mb-4" />
         <h1 className="text-xl font-semibold text-[var(--text-0)]">Sign in</h1>
         <p className="text-sm text-[var(--text-1)] mt-1">Tenant: {TENANT_NAME}</p>
+        {authErrorMsg && (
+          <p className="mt-2 text-sm text-[var(--error)]" role="alert">{authErrorMsg}</p>
+        )}
 
         <form
           method="post"
