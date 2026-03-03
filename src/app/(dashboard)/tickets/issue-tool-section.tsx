@@ -51,7 +51,7 @@ export function IssueToolSection({
     }
     setLoading(true);
     try {
-      const res = await fetch("/api/checkout", {
+      const res = await fetch("/api/issue-requests", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -78,7 +78,7 @@ export function IssueToolSection({
       onIssue?.();
       router.refresh();
     } catch {
-      alert("Issue failed");
+      alert("Request failed");
     } finally {
       setLoading(false);
     }
@@ -208,7 +208,7 @@ export function IssueToolSection({
               />
             </div>
             <Button type="submit" disabled={loading}>
-              {loading ? "Issuing..." : "Issue Tool"}
+              {loading ? "Submitting..." : "Request Tool (await admin approval)"}
             </Button>
           </form>
         )}

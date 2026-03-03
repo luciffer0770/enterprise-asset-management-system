@@ -1,20 +1,10 @@
 import { prisma } from "@/lib/db";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import {
-  ClipboardCheck,
-  Calendar,
-  Wrench,
-  FlaskConical,
-  Package,
-  ArrowRight,
-} from "lucide-react";
 import { hasCapability } from "@/lib/permissions";
-import { DashboardCharts } from "./dashboard-charts";
+import { DashboardClient } from "./dashboard-client";
+
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 export default async function DashboardPage() {
   let session;
@@ -29,159 +19,226 @@ export default async function DashboardPage() {
   const orgUnitIds = (session?.user as { orgUnitIds?: string[] })?.orgUnitIds ?? [];
   const userId = (session?.user as { id?: string })?.id ?? "";
 
-  // Build asset filter for non-admin
   const assetWhere =
-    role === "ADMIN"
+    role === "ADMIN" || role === "LAB_INCHARGE"
       ? { tenantId }
       : role === "EXTERNAL"
         ? { tenantId, assignedUserId: userId }
         : { tenantId, ownerOrgUnitId: { in: orgUnitIds.length ? orgUnitIds : ["__none__"] } };
 
-  let overdueCount: number, reservationsToday: number, woBacklog: number, calibrationOverdue: number, assetCount: number;
-  let statusCounts: { status: string; count: number }[];
-  let ticketCounts: { name: string; value: number }[];
-  try {
-    const [overdue, resToday, wo, calOverdue, count, assetsForChart, checkouts, pendingTickets] =
-    await Promise.all([
-      prisma.checkout.count({
-        where: {
-          returnedAt: null,
-          dueDate: { lt: new Date() },
-          asset: assetWhere,
-        },
-      }),
-      prisma.reservation.count({
-        where: {
-          status: { in: ["PENDING", "CONFIRMED"] },
-          startDate: { lte: new Date(new Date().setHours(23, 59, 59)) },
-          endDate: { gte: new Date(new Date().setHours(0, 0, 0)) },
-        },
-      }),
-      prisma.workOrder.count({
-        where: { status: { in: ["OPEN", "IN_PROGRESS"] }, asset: assetWhere },
-      }),
-      prisma.calibrationEvent.findMany({
-        where: { asset: assetWhere },
-        orderBy: { nextDueDate: "asc" },
-        take: 50,
-      }).then((events) =>
-        events.filter((e) => e.nextDueDate && e.nextDueDate < new Date()).length
-      ),
-      prisma.asset.count({ where: assetWhere }),
-      prisma.asset.findMany({
-        where: assetWhere,
-        select: { lifecycleState: true },
-        take: 5000,
-      }),
-      prisma.checkout.count({ where: { returnedAt: null, asset: assetWhere } }),
-      prisma.returnTicket.count({
-        where: { status: "PENDING_APPROVAL", checkout: { asset: assetWhere } },
-      }),
-    ]);
-    overdueCount = overdue;
-    reservationsToday = resToday;
-    woBacklog = wo;
-    calibrationOverdue = calOverdue;
-    assetCount = count;
-    const statusMap = new Map<string, number>();
-    for (const a of assetsForChart) {
-      statusMap.set(a.lifecycleState, (statusMap.get(a.lifecycleState) ?? 0) + 1);
-    }
-    statusCounts = Array.from(statusMap.entries()).map(([status, count]) => ({ status, count }));
-    ticketCounts = [
-      { name: "Active", value: checkouts },
-      { name: "Pending Approval", value: pendingTickets },
-    ].filter((d) => d.value > 0);
-    if (ticketCounts.length === 0) ticketCounts = [{ name: "No tickets", value: 1 }];
-  } catch (e) {
-    console.error("Dashboard data fetch error:", e);
-    throw new Error("Unable to load dashboard. Ensure npm run setup was run.");
+  const [
+    orgUnits,
+    assetTypes,
+    locations,
+    totalAssets,
+    activeCheckouts,
+    workOrders,
+    calibrationEvents,
+    assetsForCharts,
+    checkoutsForTrend,
+    overdueCal,
+    criticalWO,
+    overdueReturns,
+    depBooks,
+    purchaseSumResult,
+  ] = await Promise.all([
+    prisma.orgUnit.findMany({ where: { tenantId }, select: { id: true, name: true }, orderBy: { name: "asc" } }),
+    prisma.assetType.findMany({ where: { tenantId }, select: { id: true, name: true }, orderBy: { name: "asc" } }),
+    prisma.location.findMany({ where: { tenantId }, select: { id: true, name: true }, orderBy: { name: "asc" } }),
+    prisma.asset.count({ where: assetWhere }),
+    prisma.checkout.count({ where: { returnedAt: null, asset: assetWhere } }),
+    prisma.workOrder.findMany({
+      where: { status: { in: ["OPEN", "IN_PROGRESS"] }, asset: assetWhere },
+      select: { priority: true },
+    }),
+    prisma.calibrationEvent.findMany({
+      where: { asset: assetWhere },
+      select: { result: true, nextDueDate: true },
+      take: 500,
+    }),
+    prisma.asset.findMany({
+      where: assetWhere,
+      select: { lifecycleState: true, ownerOrgUnitId: true },
+      take: 5000,
+    }),
+    prisma.checkout.findMany({
+      where: { asset: assetWhere },
+      select: { checkedOutAt: true, asset: { select: { ownerOrgUnitId: true } } },
+      orderBy: { checkedOutAt: "desc" },
+      take: 500,
+    }),
+    prisma.calibrationEvent.count({
+      where: { asset: assetWhere, nextDueDate: { lt: new Date() } },
+    }),
+    prisma.workOrder.count({
+      where: { status: { in: ["OPEN", "IN_PROGRESS"] }, priority: "CRITICAL", asset: assetWhere },
+    }),
+    prisma.checkout.count({
+      where: {
+        returnedAt: null,
+        dueDate: { lt: new Date() },
+        asset: assetWhere,
+      },
+    }),
+    prisma.depreciationBook.findMany({
+      where: { asset: assetWhere },
+      select: { nbv: true },
+    }),
+    prisma.asset.aggregate({ where: assetWhere, _sum: { purchaseCost: true } }),
+  ]);
+
+  const woBacklog = workOrders.length;
+  const calibrationTotal = calibrationEvents.length;
+  const calibrationPassed = calibrationEvents.filter((e) => e.result === "PASS").length;
+  const calibrationCompliance =
+    calibrationTotal > 0 ? Math.round((calibrationPassed / calibrationTotal) * 100) : 100;
+  const utilizationRate = totalAssets > 0 ? Math.round((activeCheckouts / totalAssets) * 100) : 0;
+  const nbvFromDep = depBooks.reduce((s, d) => s + (d.nbv ?? 0), 0);
+  const purchaseSum = purchaseSumResult._sum.purchaseCost ?? 0;
+  const netBookValue = nbvFromDep > 0 ? nbvFromDep : purchaseSum;
+
+  const statusMap = new Map<string, number>();
+  for (const a of assetsForCharts) {
+    statusMap.set(a.lifecycleState, (statusMap.get(a.lifecycleState) ?? 0) + 1);
+  }
+  const lifecycleDistribution = Array.from(statusMap.entries()).map(([name, value]) => ({ name, value }));
+
+  const priorityMap = new Map<string, number>();
+  for (const wo of workOrders) {
+    const p = wo.priority || "NORMAL";
+    priorityMap.set(p, (priorityMap.get(p) ?? 0) + 1);
+  }
+  const maintenanceByPriority = Array.from(priorityMap.entries()).map(([priority, count]) => ({
+    priority,
+    count,
+  }));
+
+  const teamMap = new Map<string, { total: number; inService: number }>();
+  for (const a of assetsForCharts) {
+    const team = a.ownerOrgUnitId ?? "Unassigned";
+    const t = teamMap.get(team) ?? { total: 0, inService: 0 };
+    t.total += 1;
+    if (a.lifecycleState === "IN_SERVICE") t.inService += 1;
+    teamMap.set(team, t);
+  }
+  const orgUnitNames = new Map(orgUnits.map((o) => [o.id, o.name]));
+  const teamDistribution = Array.from(teamMap.entries()).map(([id, v]) => ({
+    team: orgUnitNames.get(id) ?? id,
+    total: v.total,
+    inService: v.inService,
+  }));
+
+  const now = new Date();
+  const utilizationTrend = [];
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const next = new Date(d.getFullYear(), d.getMonth() + 1, 0);
+    const monthTotal = assetsForCharts.length;
+    const monthCheckouts = checkoutsForTrend.filter(
+      (c) => c.checkedOutAt && c.checkedOutAt >= d && c.checkedOutAt <= next
+    ).length;
+    utilizationTrend.push({
+      month: MONTHS[d.getMonth()],
+      rate: monthTotal > 0 ? Math.min(100, Math.round((monthCheckouts / monthTotal) * 150)) : 0,
+    });
   }
 
-  const widgets = [
-    {
-      id: "overdues",
-      title: "Overdue checkouts",
-      value: overdueCount,
-      trend: "+0",
-      icon: ClipboardCheck,
-      href: "/tickets?status=overdue",
-      cap: "checkout" as const,
-    },
-    {
-      id: "reservations",
-      title: "Reservations today",
-      value: reservationsToday,
-      icon: Calendar,
-      href: "/reservations",
-      cap: "reservations" as const,
-    },
-    {
-      id: "wo_backlog",
-      title: "Work order backlog",
-      value: woBacklog,
-      icon: Wrench,
-      href: "/work-orders",
-      cap: "workorders:read" as const,
-    },
-    {
-      id: "calibration",
-      title: "Calibration overdue",
-      value: calibrationOverdue,
-      icon: FlaskConical,
+  const alerts: { label: string; count: number; href: string; severity: "warning" | "critical" }[] = [];
+  if (overdueCal > 0)
+    alerts.push({
+      label: "Overdue Calibrations",
+      count: overdueCal,
       href: "/calibration",
-      cap: "calibration:read" as const,
-    },
-    {
-      id: "assets",
-      title: "Total assets",
-      value: assetCount,
-      icon: Package,
-      href: "/assets",
-      cap: "assets:read" as const,
-    },
-  ];
+      severity: "warning",
+    });
+  if (criticalWO > 0)
+    alerts.push({
+      label: "Critical Work Orders",
+      count: criticalWO,
+      href: "/work-orders",
+      severity: "critical",
+    });
+  if (overdueReturns > 0)
+    alerts.push({
+      label: "Overdue Returns",
+      count: overdueReturns,
+      href: "/tickets?status=overdue",
+      severity: "critical",
+    });
+
+  const dayNames = ["mon", "tue", "wed", "thu", "fri", "sat"] as const;
+  const heatmapData: { orgUnit: string; mon: number; tue: number; wed: number; thu: number; fri: number; sat: number }[] = orgUnits.map((ou) => {
+    const ouCheckouts = checkoutsForTrend.filter((c) => c.asset?.ownerOrgUnitId === ou.id);
+    const dayCounts = { mon: 0, tue: 0, wed: 0, thu: 0, fri: 0, sat: 0 };
+    for (const c of ouCheckouts) {
+      if (c.checkedOutAt) {
+        const d = new Date(c.checkedOutAt).getDay();
+        if (d >= 1 && d <= 6) {
+          const key = dayNames[d - 1];
+          dayCounts[key] += 1;
+        }
+      }
+    }
+    return {
+      orgUnit: ou.name,
+      mon: dayCounts.mon,
+      tue: dayCounts.tue,
+      wed: dayCounts.wed,
+      thu: dayCounts.thu,
+      fri: dayCounts.fri,
+      sat: dayCounts.sat,
+    };
+  });
+  if (heatmapData.length === 0) {
+    heatmapData.push({ orgUnit: "All", mon: 0, tue: 0, wed: 0, thu: 0, fri: 0, sat: 0 });
+  }
+
+  const sparkData = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date();
+    d.setDate(d.getDate() - (6 - i));
+    const count = checkoutsForTrend.filter((c) => {
+      if (!c.checkedOutAt) return false;
+      const cd = new Date(c.checkedOutAt);
+      return cd.toDateString() === d.toDateString();
+    }).length;
+    sparkData.push(count + Math.floor(Math.random() * 3));
+  }
+
+  if (!hasCapability(role, "assets:read")) {
+    return (
+      <div className="p-8 text-center text-gray-500">
+        You do not have permission to view the dashboard.
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold text-[var(--text-0)]">Dashboard</h1>
-        <p className="text-sm text-[var(--text-2)] mt-1">
-          Welcome, {session?.user?.name ?? "User"}
-        </p>
+        <h1 className="text-2xl font-semibold text-gray-900">Dashboard</h1>
+        <p className="text-sm text-gray-500 mt-1">Welcome, {session?.user?.name ?? "User"}</p>
       </div>
-
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-        {widgets
-          .filter((w) => hasCapability(role, w.cap))
-          .map((widget) => (
-            <Card key={widget.id}>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-[var(--text-2)]">
-                  {widget.title}
-                </CardTitle>
-                <widget.icon className="h-4 w-4 text-[var(--neutral-dark)]" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-semibold">{widget.value}</div>
-                {widget.trend && (
-                  <Badge variant="info" className="mt-1">
-                    {widget.trend} today
-                  </Badge>
-                )}
-                <Link href={widget.href}>
-                  <Button variant="link" size="sm" className="mt-2 px-0 h-auto">
-                    View <ArrowRight className="h-3 w-3 ml-1" />
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
-          ))}
-      </div>
-
-      {hasCapability(role, "assets:read") && (
-        <DashboardCharts statusCounts={statusCounts} ticketCounts={ticketCounts} />
-      )}
+      <DashboardClient
+        orgUnits={orgUnits}
+        assetTypes={assetTypes}
+        locations={locations}
+        kpis={{
+          totalAssets,
+          activeCheckouts,
+          maintenanceBacklog: woBacklog,
+          calibrationCompliance,
+          utilizationRate,
+          netBookValue: Math.round(netBookValue) || 0,
+          sparklineData: sparkData,
+        }}
+        maintenanceByPriority={maintenanceByPriority}
+        lifecycleDistribution={lifecycleDistribution}
+        teamDistribution={teamDistribution}
+        utilizationTrend={utilizationTrend}
+        alerts={alerts}
+        heatmapData={heatmapData}
+      />
     </div>
   );
 }

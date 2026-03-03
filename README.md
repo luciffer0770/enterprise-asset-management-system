@@ -18,18 +18,19 @@ No mobile scan or external integrations (removed).
 
 ```bash
 cd /workspace   # or your project directory
-npm install
-npm run setup
+rm -f prisma/dev.db   # optional: fresh DB
+npm run setup         # installs deps, migrates, seeds
 npm run dev
 ```
 
-**Note:** Use `npm run setup` (not `db:migrate` + `db:seed`). It creates `.env`, runs migrations, and seeds the database.
+**Note:** `npm run setup` runs `npm install` first, then migrations and seed. Use it instead of separate `db:migrate` + `db:seed`.
+
+**If you see "Prisma 7" or "datasource url no longer supported":** The project uses Prisma 5. Run `rm -rf node_modules package-lock.json && npm install && npm run setup` to get the correct versions.
 
 **If setup fails with "column does not exist" or migration errors:** Reset the database:
 ```bash
 rm -f prisma/dev.db
 npm run setup
-npm run dev
 ```
 
 Open the app:

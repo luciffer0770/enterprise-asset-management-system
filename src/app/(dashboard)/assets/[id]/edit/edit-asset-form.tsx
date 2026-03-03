@@ -12,21 +12,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { Asset, AssetType, OrgUnit, Location, InventoryPool, Trolley } from "@prisma/client";
+import type { Asset, AssetType, OrgUnit, Location, Trolley } from "@prisma/client";
 
 export function EditAssetForm({
   asset,
   types,
   orgUnits,
   locations,
-  pools,
   trolleys,
 }: {
   asset: Asset & { assetType: AssetType; trolley?: Trolley & { project: { name: string } } | null };
   types: AssetType[];
   orgUnits: OrgUnit[];
   locations: Location[];
-  pools: InventoryPool[];
   trolleys: (Trolley & { project: { name: string } })[];
 }) {
   const router = useRouter();

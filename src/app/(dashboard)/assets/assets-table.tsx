@@ -40,8 +40,7 @@ export function AssetsTable({
             <th>Type</th>
             <th>Status</th>
             <th>Org Unit</th>
-            <th>Location</th>
-            <th>Trolley</th>
+            <th>At (Location / Trolley)</th>
             <th>Assigned To</th>
             <th>Calibration Due</th>
             <th>NBV</th>
@@ -66,8 +65,11 @@ export function AssetsTable({
                 </Badge>
               </td>
               <td>{a.ownerOrgUnit?.name ?? "—"}</td>
-              <td>{a.locationPath ?? a.location?.name ?? "—"}</td>
-              <td>{a.trolley ? `${a.trolley.trolleyCode} (${a.trolley.project.name})` : "—"}</td>
+              <td>
+                {a.trolleyId && a.trolley
+                  ? `${a.trolley.trolleyCode} (${a.trolley.project.name})`
+                  : a.locationPath ?? a.location?.name ?? "—"}
+              </td>
               <td>{a.assignedUser?.displayName ?? "—"}</td>
               <td className="text-sm text-[var(--text-2)]">
                 {/* Would need calibration join - simplified */}

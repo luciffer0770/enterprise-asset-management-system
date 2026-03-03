@@ -31,11 +31,10 @@ export default async function EditAssetPage({
 
   if (!asset) notFound();
 
-  const [types, orgUnits, locations, pools, trolleys] = await Promise.all([
+  const [types, orgUnits, locations, trolleys] = await Promise.all([
     prisma.assetType.findMany({ where: { tenantId } }),
     prisma.orgUnit.findMany({ where: { tenantId } }),
     prisma.location.findMany({ where: { tenantId } }),
-    prisma.inventoryPool.findMany({ where: { tenantId } }),
     prisma.trolley.findMany({ where: { tenantId }, include: { project: true }, orderBy: { trolleyCode: "asc" } }),
   ]);
 
@@ -47,7 +46,6 @@ export default async function EditAssetPage({
         types={types}
         orgUnits={orgUnits}
         locations={locations}
-        pools={pools}
         trolleys={trolleys}
       />
     </div>

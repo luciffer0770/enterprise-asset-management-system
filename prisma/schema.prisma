@@ -88,7 +88,8 @@ model Trolley {
   status      String    @default("ACTIVE") // ACTIVE, INACTIVE
   createdAt   DateTime  @default(now())
   assets      Asset[]
-  checkouts   Checkout[]
+  checkouts     Checkout[]
+  issueRequests IssueRequest[]
   @@unique([tenantId, trolleyCode])
 }
 
@@ -111,9 +112,11 @@ model User {
   reservations Reservation[]
   workOrders   WorkOrder[]
   auditLogs    AuditLogEvent[]
-  ticketsRaised ReturnTicket[]  @relation("TicketRaisedBy")
-  ticketsApproved ReturnTicket[] @relation("TicketApprovedBy")
-  ticketApprovals TicketApproval[]
+  ticketsRaised    ReturnTicket[]   @relation("TicketRaisedBy")
+  ticketsApproved ReturnTicket[]   @relation("TicketApprovedBy")
+  ticketApprovals  TicketApproval[]
+  issueRequests    IssueRequest[]   @relation("IssueRequestedBy")
+  issueApproved    IssueRequest[]   @relation("IssueApprovedBy")
   @@unique([tenantId, email])
 }
 
@@ -160,6 +163,7 @@ model Asset {
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
   checkouts        Checkout[]
+  issueRequests    IssueRequest[]
   reservations     Reservation[]
   workOrders       WorkOrder[]
   calibrations     CalibrationEvent[]
@@ -168,6 +172,27 @@ model Asset {
   auditItems       InventoryAuditItem[]
 
   @@unique([tenantId, assetTag])
+}
+
+// ============ ISSUE REQUEST (admin approves before checkout) ============
+
+model IssueRequest {
+  id             String    @id @default(cuid())
+  assetId        String
+  asset          Asset     @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  requesterId    String
+  requester      User      @relation("IssueRequestedBy", fields: [requesterId], references: [id])
+  borrowerName   String
+  borrowerEmpId  String
+  reason         String
+  trolleyId      String?
+  trolley        Trolley?  @relation(fields: [trolleyId], references: [id])
+  status         String    @default("PENDING_APPROVAL") // PENDING_APPROVAL, APPROVED, REJECTED
+  approverId     String?
+  approver       User?     @relation("IssueApprovedBy", fields: [approverId], references: [id])
+  decidedAt      DateTime?
+  dueDate        DateTime?
+  createdAt      DateTime  @default(now())
 }
 
 // ============ CHECKOUT / CUSTODY ============

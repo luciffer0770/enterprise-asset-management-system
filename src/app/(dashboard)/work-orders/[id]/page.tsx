@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft } from "lucide-react";
 import { hasCapability } from "@/lib/permissions";
+import { WorkOrderStatus } from "./work-order-status";
 
 export default async function WorkOrderDetailPage({
   params,
@@ -91,6 +92,11 @@ export default async function WorkOrderDetailPage({
             <div>
               <span className="text-sm text-[var(--text-2)]">Description</span>
               <p className="mt-1">{wo.description}</p>
+            </div>
+          )}
+          {role === "ADMIN" && (
+            <div className="pt-4 border-t border-[var(--border)]">
+              <WorkOrderStatus workOrderId={wo.id} currentStatus={wo.status} canChange={true} />
             </div>
           )}
         </CardContent>

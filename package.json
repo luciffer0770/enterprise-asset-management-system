@@ -8,7 +8,7 @@
     "dev:3000": "npx next dev -H 0.0.0.0 -p 3000",
     "dev:3001": "npx next dev -H 0.0.0.0 -p 3001",
     "dev:8080": "npx next dev -H 0.0.0.0 -p 8080",
-    "setup": "node scripts/ensure-env.js && npx prisma generate && npx prisma migrate deploy && npx tsx prisma/seed.ts",
+    "setup": "npm install && node scripts/ensure-env.js && npx prisma generate && npx prisma migrate deploy && npx tsx prisma/seed.ts",
     "tunnel": "npx localtunnel --port 3000",
     "dev:cloud": "npm run setup && npm run dev & sleep 8 && npm run tunnel",
     "build": "npx next build",
@@ -22,7 +22,7 @@
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.7.4",
-    "@prisma/client": "^5.22.0",
+    "@prisma/client": "5.22.0",
     "@radix-ui/react-dialog": "^1.1.2",
     "@radix-ui/react-dropdown-menu": "^2.1.2",
     "@radix-ui/react-label": "^2.1.0",
@@ -35,7 +35,7 @@
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "lucide-react": "^0.468.0",
-    "next": "15.0.7",
+    "next": "15.5.12",
     "next-auth": "^4.24.10",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
@@ -44,6 +44,9 @@
     "xlsx": "^0.18.5",
     "zod": "^3.23.8"
   },
+  "overrides": {
+    "cookie": ">=0.7.0"
+  },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^22.10.1",
@@ -51,9 +54,9 @@
     "@types/react-dom": "^18.3.1",
     "autoprefixer": "^10.4.27",
     "eslint": "^9.16.0",
-    "eslint-config-next": "15.0.7",
+    "eslint-config-next": "15.5.12",
     "postcss": "^8.4.49",
-    "prisma": "^5.22.0",
+    "prisma": "5.22.0",
     "tailwindcss": "^3.4.16",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2",

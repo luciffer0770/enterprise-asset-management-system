@@ -62,16 +62,6 @@ async function main() {
     });
   }
 
-  // Pool
-  let pool1 = await prisma.inventoryPool.findFirst({
-    where: { tenantId: tenant.id, name: "General Tool Pool" },
-  });
-  if (!pool1) {
-    pool1 = await prisma.inventoryPool.create({
-      data: { tenantId: tenant.id, name: "General Tool Pool" },
-    });
-  }
-
   // Asset types
   const categories = ["tool", "instrument", "machine", "IT", "vehicle", "kit", "consumable"];
   const types = await Promise.all(
@@ -155,7 +145,6 @@ async function main() {
           lifecycleState: "IN_SERVICE",
           ownerOrgUnitId: orgUnit.id,
           locationId: i % 2 === 0 ? loc1.id : loc2.id,
-          poolId: pool1.id,
           assignedUserId,
           status: "IN_SERVICE",
           condition: i % 5 === 0 ? "FAIR" : "GOOD",
@@ -331,7 +320,7 @@ async function main() {
     },
   }).catch(() => {});
 
-  console.log(`Seeded: ${assetLimit} assets, 4 users, org units, projects, trolleys, locations, pools`);
+  console.log(`Seeded: ${assetLimit} assets, 4 users, org units, projects, trolleys, locations`);
 }
 
 main()

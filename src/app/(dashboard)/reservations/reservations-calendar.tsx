@@ -48,7 +48,7 @@ export function ReservationsCalendar({
               <tr key={r.id}>
                 <td>
                   <div className="font-medium">
-                    {r.asset?.assetTag ?? "Pool"}
+                    {r.asset?.assetTag ?? "—"}
                   </div>
                   <div className="text-xs text-[var(--text-2)]">
                     {r.requester.displayName}
