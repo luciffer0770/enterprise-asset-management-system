@@ -122,8 +122,8 @@ export function LoginForm() {
               </button>
             </form>
 
-            <p className="mt-4 text-center">
-              <a href="#" className="text-sm text-gray-500 hover:text-gray-700">Forgot Password?</a>
+            <p className="mt-4 text-center text-sm text-gray-500">
+              Forgot password? Contact your administrator.
             </p>
 
             <div className="mt-6 pt-6 border-t border-gray-200">

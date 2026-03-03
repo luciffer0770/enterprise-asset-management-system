@@ -82,7 +82,7 @@ export default async function TicketsPage({
       take: 200,
     }),
     prisma.asset.findMany({
-      where: { ...assetWhere, lifecycleState: "IN_SERVICE" },
+      where: { ...assetWhere, lifecycleState: "IN_SERVICE", trolleyId: null },
       include: { assetType: true },
       take: 200,
     }),
@@ -200,8 +200,9 @@ export default async function TicketsPage({
         overdue: overdueCount,
         closedToday: closedTodayCount,
       }}
-      canApprove={hasCapability(role, "tickets:approve")}
-      canReturn={hasCapability(role, "checkout")}
+        canApprove={hasCapability(role, "tickets:approve")}
+        canReturn={hasCapability(role, "checkout")}
+        canClose={role === "ADMIN"}
       availableAssets={availableAssets}
       trolleys={trolleys}
       role={role}

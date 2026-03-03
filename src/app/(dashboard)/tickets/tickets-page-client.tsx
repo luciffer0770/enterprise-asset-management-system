@@ -65,6 +65,7 @@ type Props = {
   kpis: { active: number; pending: number; issued: number; overdue: number; closedToday: number };
   canApprove: boolean;
   canReturn: boolean;
+  canClose: boolean;
   availableAssets: Parameters<typeof IssueToolSection>[0]["availableAssets"];
   trolleys: Parameters<typeof IssueToolSection>[0]["trolleys"];
   role: string;
@@ -76,6 +77,7 @@ export function TicketsPageClient({
   kpis,
   canApprove,
   canReturn,
+  canClose,
   availableAssets,
   trolleys,
   role,
@@ -92,6 +94,7 @@ export function TicketsPageClient({
   const [returnDecision, setReturnDecision] = useState<"APPROVE" | "REJECT">("APPROVE");
   const [returnNotes, setReturnNotes] = useState("");
   const [assetState, setAssetState] = useState<"IN_SERVICE" | "UNDER_MAINTENANCE" | "QUARANTINED">("IN_SERVICE");
+  const [closeReason, setCloseReason] = useState("");
   const [loading, setLoading] = useState(false);
 
   const filtered = useMemo(() => {
@@ -146,6 +149,29 @@ export function TicketsPageClient({
       if (!res.ok) throw new Error(await res.json().then((d) => d.message).catch(() => "Failed"));
       setSelectedTicket(null);
       setReturnNotes("");
+      router.refresh();
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Failed");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleCloseCheckout(checkoutId: string) {
+    if (!closeReason.trim()) {
+      alert("Please enter a reason for closing");
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/checkout/${checkoutId}/close`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reason: closeReason.trim() }),
+      });
+      if (!res.ok) throw new Error(await res.json().then((d: { message?: string }) => d.message).catch(() => "Failed"));
+      setSelectedTicket(null);
+      setCloseReason("");
       router.refresh();
     } catch (e) {
       alert(e instanceof Error ? e.message : "Failed");
@@ -360,6 +386,28 @@ export function TicketsPageClient({
                 <div className="pt-4">
                   <Button onClick={() => handleReturn(selectedTicket.assetId!)} disabled={loading}>
                     {loading ? "..." : "Initiate Return"}
+                  </Button>
+                </div>
+              )}
+
+              {(selectedTicket.type === "checkout" && selectedTicket.status === "OVERDUE" && canClose) && (
+                <div className="space-y-4 pt-4">
+                  <div>
+                    <Label>Close reason (required)</Label>
+                    <Textarea
+                      value={closeReason}
+                      onChange={(e) => setCloseReason(e.target.value)}
+                      placeholder="e.g. Tool returned late, no action needed"
+                      rows={3}
+                      className="mt-1"
+                    />
+                  </div>
+                  <Button
+                    onClick={() => handleCloseCheckout(selectedTicket.id)}
+                    disabled={loading || !closeReason.trim()}
+                    className="bg-emerald-600 hover:bg-emerald-700"
+                  >
+                    {loading ? "..." : "Close Ticket"}
                   </Button>
                 </div>
               )}

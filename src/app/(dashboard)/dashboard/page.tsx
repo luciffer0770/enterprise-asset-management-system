@@ -27,9 +27,6 @@ export default async function DashboardPage() {
         : { tenantId, ownerOrgUnitId: { in: orgUnitIds.length ? orgUnitIds : ["__none__"] } };
 
   const [
-    orgUnits,
-    assetTypes,
-    locations,
     totalAssets,
     activeCheckouts,
     workOrders,
@@ -42,9 +39,6 @@ export default async function DashboardPage() {
     depBooks,
     purchaseSumResult,
   ] = await Promise.all([
-    prisma.orgUnit.findMany({ where: { tenantId }, select: { id: true, name: true }, orderBy: { name: "asc" } }),
-    prisma.assetType.findMany({ where: { tenantId }, select: { id: true, name: true }, orderBy: { name: "asc" } }),
-    prisma.location.findMany({ where: { tenantId }, select: { id: true, name: true }, orderBy: { name: "asc" } }),
     prisma.asset.count({ where: assetWhere }),
     prisma.checkout.count({ where: { returnedAt: null, asset: assetWhere } }),
     prisma.workOrder.findMany({
@@ -102,6 +96,11 @@ export default async function DashboardPage() {
     statusMap.set(a.lifecycleState, (statusMap.get(a.lifecycleState) ?? 0) + 1);
   }
   const lifecycleDistribution = Array.from(statusMap.entries()).map(([name, value]) => ({ name, value }));
+  const totalForPct = lifecycleDistribution.reduce((s, d) => s + d.value, 0);
+  const lifecycleDistributionWithPct = lifecycleDistribution.map((d) => ({
+    ...d,
+    pct: totalForPct > 0 ? Math.round((d.value / totalForPct) * 100) : 0,
+  }));
 
   const priorityMap = new Map<string, number>();
   for (const wo of workOrders) {
@@ -111,21 +110,6 @@ export default async function DashboardPage() {
   const maintenanceByPriority = Array.from(priorityMap.entries()).map(([priority, count]) => ({
     priority,
     count,
-  }));
-
-  const teamMap = new Map<string, { total: number; inService: number }>();
-  for (const a of assetsForCharts) {
-    const team = a.ownerOrgUnitId ?? "Unassigned";
-    const t = teamMap.get(team) ?? { total: 0, inService: 0 };
-    t.total += 1;
-    if (a.lifecycleState === "IN_SERVICE") t.inService += 1;
-    teamMap.set(team, t);
-  }
-  const orgUnitNames = new Map(orgUnits.map((o) => [o.id, o.name]));
-  const teamDistribution = Array.from(teamMap.entries()).map(([id, v]) => ({
-    team: orgUnitNames.get(id) ?? id,
-    total: v.total,
-    inService: v.inService,
   }));
 
   const now = new Date();
@@ -166,44 +150,18 @@ export default async function DashboardPage() {
       severity: "critical",
     });
 
-  const dayNames = ["mon", "tue", "wed", "thu", "fri", "sat"] as const;
-  const heatmapData: { orgUnit: string; mon: number; tue: number; wed: number; thu: number; fri: number; sat: number }[] = orgUnits.map((ou) => {
-    const ouCheckouts = checkoutsForTrend.filter((c) => c.asset?.ownerOrgUnitId === ou.id);
-    const dayCounts = { mon: 0, tue: 0, wed: 0, thu: 0, fri: 0, sat: 0 };
-    for (const c of ouCheckouts) {
-      if (c.checkedOutAt) {
-        const d = new Date(c.checkedOutAt).getDay();
-        if (d >= 1 && d <= 6) {
-          const key = dayNames[d - 1];
-          dayCounts[key] += 1;
-        }
-      }
-    }
-    return {
-      orgUnit: ou.name,
-      mon: dayCounts.mon,
-      tue: dayCounts.tue,
-      wed: dayCounts.wed,
-      thu: dayCounts.thu,
-      fri: dayCounts.fri,
-      sat: dayCounts.sat,
-    };
+  const auditLogs = await prisma.auditLogEvent.findMany({
+    where: { tenantId },
+    orderBy: { eventTs: "desc" },
+    take: 10,
+    include: { actor: { select: { email: true } } },
   });
-  if (heatmapData.length === 0) {
-    heatmapData.push({ orgUnit: "All", mon: 0, tue: 0, wed: 0, thu: 0, fri: 0, sat: 0 });
-  }
-
-  const sparkData = [];
-  for (let i = 0; i < 7; i++) {
-    const d = new Date();
-    d.setDate(d.getDate() - (6 - i));
-    const count = checkoutsForTrend.filter((c) => {
-      if (!c.checkedOutAt) return false;
-      const cd = new Date(c.checkedOutAt);
-      return cd.toDateString() === d.toDateString();
-    }).length;
-    sparkData.push(count + Math.floor(Math.random() * 3));
-  }
+  const recentActivity = auditLogs.map((e) => ({
+    type: e.action + " · " + e.entityType,
+    id: (e.entityId ?? "").slice(-8).toUpperCase() || "—",
+    user: e.actor?.email ?? "—",
+    at: e.eventTs.toISOString().slice(0, 16).replace("T", " "),
+  }));
 
   if (!hasCapability(role, "assets:read")) {
     return (
@@ -220,9 +178,6 @@ export default async function DashboardPage() {
         <p className="text-sm text-gray-500 mt-1">Welcome, {session?.user?.name ?? "User"}</p>
       </div>
       <DashboardClient
-        orgUnits={orgUnits}
-        assetTypes={assetTypes}
-        locations={locations}
         kpis={{
           totalAssets,
           activeCheckouts,
@@ -230,14 +185,13 @@ export default async function DashboardPage() {
           calibrationCompliance,
           utilizationRate,
           netBookValue: Math.round(netBookValue) || 0,
-          sparklineData: sparkData,
         }}
         maintenanceByPriority={maintenanceByPriority}
         lifecycleDistribution={lifecycleDistribution}
-        teamDistribution={teamDistribution}
+        lifecycleDistributionWithPct={lifecycleDistributionWithPct}
         utilizationTrend={utilizationTrend}
         alerts={alerts}
-        heatmapData={heatmapData}
+        recentActivity={recentActivity}
       />
     </div>
   );

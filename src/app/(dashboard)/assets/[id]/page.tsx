@@ -157,7 +157,7 @@ export default async function AssetDetailPage({
                   </Link>
                 </Button>
                 <Button variant="secondary" className="w-full mt-2" asChild>
-                  <Link href={`/reservations?assetId=${asset.id}`}>
+                  <Link href={`/reservations/new?assetId=${asset.id}`}>
                     <Calendar className="h-4 w-4 mr-2" />
                     Reserve
                   </Link>

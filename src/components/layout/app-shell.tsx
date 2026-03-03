@@ -39,10 +39,14 @@ export function AppShell({
   children,
   role,
   tenantName,
+  workOrderBadge = 0,
+  ticketBadge = 0,
 }: {
   children: React.ReactNode;
   role: Role | string;
   tenantName: string;
+  workOrderBadge?: number;
+  ticketBadge?: number;
 }) {
   const pathname = usePathname();
   const [navOpen, setNavOpen] = useState(false);
@@ -54,7 +58,7 @@ export function AppShell({
       {/* Desktop sidebar */}
       <aside
         className={cn(
-          "hidden md:flex flex-col w-56 border-r border-[var(--border)] bg-[var(--surface-0)]",
+          "hidden md:flex flex-col w-44 border-r border-[var(--border)] bg-[var(--surface-0)]",
           "fixed left-0 top-0 bottom-0 z-40"
         )}
       >
@@ -78,6 +82,16 @@ export function AppShell({
               >
                 <item.icon className="h-4 w-4 shrink-0" />
                 {item.label}
+                {(item.href === "/work-orders" && workOrderBadge > 0) && (
+                  <span className="ml-auto min-w-[18px] h-[18px] rounded-full bg-[var(--brand-red)] text-white text-xs flex items-center justify-center px-1">
+                    {workOrderBadge > 99 ? "99+" : workOrderBadge}
+                  </span>
+                )}
+                {(item.href === "/tickets" && ticketBadge > 0) && (
+                  <span className="ml-auto min-w-[18px] h-[18px] rounded-full bg-[var(--warning)] text-white text-xs flex items-center justify-center px-1">
+                    {ticketBadge > 99 ? "99+" : ticketBadge}
+                  </span>
+                )}
               </Link>
             );
           })}
@@ -94,7 +108,7 @@ export function AppShell({
       )}
       <aside
         className={cn(
-          "md:hidden fixed left-0 top-0 bottom-0 w-56 bg-[var(--surface-0)] border-r border-[var(--border)] z-50 transition-transform",
+          "md:hidden fixed left-0 top-0 bottom-0 w-44 bg-[var(--surface-0)] border-r border-[var(--border)] z-50 transition-transform",
           navOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
@@ -176,8 +190,8 @@ export function AppShell({
             <Wrench className="h-5 w-5 mb-1" />
             Work Orders
           </Link>
-          <Link href="/dashboard" className="flex flex-col items-center text-xs">
-            <Menu className="h-5 w-5 mb-1" />
+          <Link href="/calibration" className="flex flex-col items-center text-xs">
+            <FlaskConical className="h-5 w-5 mb-1" />
             More
           </Link>
         </nav>

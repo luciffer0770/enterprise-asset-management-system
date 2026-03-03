@@ -6,7 +6,8 @@ import { logAudit } from "@/lib/audit";
 import { z } from "zod";
 
 const schema = z.object({
-  status: z.enum(["OPEN", "IN_PROGRESS", "ON_HOLD", "COMPLETED", "CANCELLED"]),
+  status: z.enum(["OPEN", "IN_PROGRESS", "ON_HOLD", "COMPLETED", "CANCELLED"]).optional(),
+  assignedToId: z.string().optional(),
 });
 
 export async function PATCH(
@@ -17,9 +18,10 @@ export async function PATCH(
   if (!session?.user) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
+  const { hasCapability } = await import("@/lib/permissions");
   const role = (session.user as { role?: string }).role ?? "";
-  if (role !== "ADMIN") {
-    return NextResponse.json({ message: "Only Admin can change work order status" }, { status: 403 });
+  if (!hasCapability(role, "workorders:write")) {
+    return NextResponse.json({ message: "Forbidden" }, { status: 403 });
   }
 
   const { id } = await params;
@@ -41,13 +43,22 @@ export async function PATCH(
     return NextResponse.json({ message: "Not found" }, { status: 404 });
   }
 
+  const data: { status?: string; completedAt?: Date | null; assignedToId?: string | null } = {};
+  if (parsed.data.status) {
+    if (role !== "ADMIN") {
+      return NextResponse.json({ message: "Only Admin can change status" }, { status: 403 });
+    }
+    data.status = parsed.data.status;
+    data.completedAt = parsed.data.status === "COMPLETED" ? new Date() : null;
+  }
+  if (parsed.data.assignedToId !== undefined) {
+    data.assignedToId = parsed.data.assignedToId || null;
+  }
+
   const prevStatus = wo.status;
   await prisma.workOrder.update({
     where: { id },
-    data: {
-      status: parsed.data.status,
-      completedAt: parsed.data.status === "COMPLETED" ? new Date() : null,
-    },
+    data,
   });
 
   await logAudit({
@@ -56,7 +67,7 @@ export async function PATCH(
     entityType: "WorkOrder",
     entityId: id,
     action: "UPDATE",
-    diff: { status: { from: prevStatus, to: parsed.data.status } },
+    diff: { ...(parsed.data.status && { status: { from: prevStatus, to: parsed.data.status } }), ...(parsed.data.assignedToId !== undefined && { assignedToId: parsed.data.assignedToId }) },
   });
 
   return NextResponse.json({ ok: true });

@@ -7,6 +7,7 @@ import { format } from "date-fns";
 import { Download } from "lucide-react";
 import type { CalibrationEvent, Asset, AssetType } from "@prisma/client";
 import { CalibrationCertUpload } from "./calibration-cert-upload";
+import { CalibrationDatesForm } from "./calibration-dates-form";
 
 type CalWithAsset = CalibrationEvent & {
   asset: Asset & { assetType: AssetType };
@@ -26,6 +27,7 @@ export function CalibrationTable({
           <tr>
             <th>Asset</th>
             <th>Last Result</th>
+            <th>Performed</th>
             <th>Next Due</th>
             <th>Certificate</th>
             {canWrite && <th>Actions</th>}
@@ -57,6 +59,9 @@ export function CalibrationTable({
                 </Badge>
               </td>
               <td className="text-sm">
+                {c.performedDate ? format(new Date(c.performedDate), "PP") : "—"}
+              </td>
+              <td className="text-sm">
                 {c.nextDueDate ? format(new Date(c.nextDueDate), "PP") : "—"}
               </td>
               <td>
@@ -74,7 +79,15 @@ export function CalibrationTable({
               </td>
               {canWrite && (
                 <td>
-                  <CalibrationCertUpload calibrationId={c.id} assetTag={c.asset.assetTag} hasCert={!!c.certificateUrl} />
+                  <div className="flex flex-col gap-1">
+                    <CalibrationDatesForm
+                      calibrationId={c.id}
+                      performedDate={c.performedDate?.toISOString?.() ?? null}
+                      nextDueDate={c.nextDueDate?.toISOString?.() ?? null}
+                      canWrite={canWrite}
+                    />
+                    <CalibrationCertUpload calibrationId={c.id} assetTag={c.asset.assetTag} hasCert={!!c.certificateUrl} />
+                  </div>
                 </td>
               )}
             </tr>
