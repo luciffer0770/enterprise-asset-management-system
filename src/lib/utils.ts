@@ -23,7 +23,7 @@ export const ASSET_LIFECYCLE_STATES = [
 
 export type AssetLifecycleState = (typeof ASSET_LIFECYCLE_STATES)[number];
 
-export const ROLES = ["ADMIN", "MECHANICAL", "ELECTRICAL", "EXTERNAL"] as const;
+export const ROLES = ["ADMIN", "LAB_INCHARGE", "MECHANICAL", "ELECTRICAL", "EXTERNAL"] as const;
 export type Role = (typeof ROLES)[number];
 
 export const TENANT_NAME = process.env.TENANT_NAME ?? "Tooling Dept";

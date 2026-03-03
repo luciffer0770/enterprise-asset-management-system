@@ -12,18 +12,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { AssetType, OrgUnit, Location, InventoryPool } from "@prisma/client";
+import type { AssetType, OrgUnit, Location, InventoryPool, Trolley } from "@prisma/client";
 
 export function NewAssetForm({
   types,
   orgUnits,
   locations,
   pools,
+  trolleys,
 }: {
   types: AssetType[];
   orgUnits: OrgUnit[];
   locations: Location[];
   pools: InventoryPool[];
+  trolleys: (Trolley & { project: { name: string } })[];
 }) {
   const router = useRouter();
   const [assetTag, setAssetTag] = useState("");
@@ -31,6 +33,8 @@ export function NewAssetForm({
   const [assetTypeId, setAssetTypeId] = useState("");
   const [ownerOrgUnitId, setOwnerOrgUnitId] = useState("");
   const [locationId, setLocationId] = useState("");
+  const [locationPath, setLocationPath] = useState("");
+  const [trolleyId, setTrolleyId] = useState("");
   const [poolId, setPoolId] = useState("");
   const [purchaseCost, setPurchaseCost] = useState("");
   const [loading, setLoading] = useState(false);
@@ -52,6 +56,8 @@ export function NewAssetForm({
           assetTypeId,
           ownerOrgUnitId: ownerOrgUnitId || undefined,
           locationId: locationId || undefined,
+          locationPath: locationPath || undefined,
+          trolleyId: trolleyId || undefined,
           poolId: poolId || undefined,
           purchaseCost: purchaseCost ? parseFloat(purchaseCost) : undefined,
         }),
@@ -123,16 +129,24 @@ export function NewAssetForm({
         </Select>
       </div>
       <div>
-        <Label>Location</Label>
-        <Select value={locationId} onValueChange={setLocationId}>
+        <Label>Location (type manually)</Label>
+        <Input
+          value={locationPath}
+          onChange={(e) => setLocationPath(e.target.value)}
+          placeholder="e.g. Building A, Bay 3, Shelf 2"
+        />
+      </div>
+      <div>
+        <Label>Trolley</Label>
+        <Select value={trolleyId} onValueChange={setTrolleyId}>
           <SelectTrigger>
             <SelectValue placeholder="Optional" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="">—</SelectItem>
-            {locations.map((loc) => (
-              <SelectItem key={loc.id} value={loc.id}>
-                {loc.name}
+            {trolleys.map((t) => (
+              <SelectItem key={t.id} value={t.id}>
+                {t.trolleyCode} — {t.project.name}
               </SelectItem>
             ))}
           </SelectContent>

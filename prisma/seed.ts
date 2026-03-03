@@ -271,19 +271,51 @@ async function main() {
     }
   }
 
-  // Integration configs
-  for (const t of ["OIDC_SSO", "SCIM", "ERP", "CMMS", "BARCODE_RFID", "IOT"]) {
-    let cfg = await prisma.integrationConfig.findFirst({
-      where: { tenantId: tenant.id, type: t },
+  // Projects and Trolleys
+  const projects = await Promise.all(
+    ["Project Alpha", "Project Beta", "Project Gamma", "Project Delta"].map(async (name, i) => {
+      let p = await prisma.project.findFirst({ where: { tenantId: tenant.id, name } });
+      if (!p) {
+        p = await prisma.project.create({ data: { tenantId: tenant.id, name } });
+      }
+      return p;
+    })
+  );
+
+  const trolleyList: Awaited<ReturnType<typeof prisma.trolley.create>>[] = [];
+  for (let i = 1; i <= 8; i++) {
+    const code = `TR-${String(i).padStart(3, "0")}`;
+    const proj = projects[(i - 1) % projects.length];
+    const dept = i % 2 === 1 ? "Mechanical" : "Electrical";
+    let t = await prisma.trolley.findFirst({
+      where: { tenantId: tenant.id, trolleyCode: code },
     });
-    if (!cfg) {
-      await prisma.integrationConfig.create({
+    if (!t) {
+      t = await prisma.trolley.create({
         data: {
           tenantId: tenant.id,
-          type: t,
-          enabled: false,
-          config: "{}",
+          projectId: proj.id,
+          trolleyCode: code,
+          department: dept,
+          status: i % 3 === 0 ? "INACTIVE" : "ACTIVE",
         },
+      });
+    }
+    trolleyList.push(t);
+  }
+
+  // Assign some assets to trolleys
+  const assetsToAssign = await prisma.asset.findMany({
+    where: { tenantId: tenant.id },
+    take: 50,
+  });
+  for (let i = 0; i < assetsToAssign.length; i++) {
+    const a = assetsToAssign[i];
+    const t = trolleyList[i % trolleyList.length];
+    if (t) {
+      await prisma.asset.update({
+        where: { id: a.id },
+        data: { trolleyId: t.id, projectId: t.projectId },
       });
     }
   }
@@ -299,7 +331,7 @@ async function main() {
     },
   }).catch(() => {});
 
-  console.log(`Seeded: ${assetLimit} assets, 4 users, org units, locations, pools`);
+  console.log(`Seeded: ${assetLimit} assets, 4 users, org units, projects, trolleys, locations, pools`);
 }
 
 main()

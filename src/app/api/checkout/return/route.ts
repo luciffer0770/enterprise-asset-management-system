@@ -36,16 +36,43 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ message: "No active checkout found" }, { status: 404 });
   }
 
-  await prisma.$transaction([
-    prisma.checkout.update({
-      where: { id: checkout.id },
-      data: { returnedAt: new Date(), conditionIn: "GOOD" },
-    }),
-    prisma.asset.update({
+  // Create ReturnTicket (requires approval for Admin/LAB_INCHARGE)
+  const canApprove = hasCapability((session.user as { role?: string }).role ?? "", "tickets:approve");
+  if (canApprove) {
+    // Approver: auto-approve and complete return
+    await prisma.$transaction([
+      prisma.checkout.update({
+        where: { id: checkout.id },
+        data: { returnedAt: new Date(), conditionIn: body.conditionIn ?? "GOOD" },
+      }),
+      prisma.asset.update({
+        where: { id: assetId },
+        data: { lifecycleState: "IN_SERVICE", status: "IN_SERVICE" },
+      }),
+    ]);
+  } else {
+    // Non-approver: create ticket, set RETURN_PENDING
+    const ticket = await prisma.returnTicket.create({
+      data: {
+        checkoutId: checkout.id,
+        status: "PENDING_APPROVAL",
+        raisedById: userId,
+      },
+    });
+    await prisma.asset.update({
       where: { id: assetId },
-      data: { lifecycleState: "IN_SERVICE", status: "IN_SERVICE" },
-    }),
-  ]);
+      data: { lifecycleState: "RETURN_PENDING", status: "RETURN_PENDING" },
+    });
+    await logAudit({
+      tenantId,
+      actorUserId: userId,
+      entityType: "ReturnTicket",
+      entityId: ticket.id,
+      action: "CREATE",
+      diff: { assetTag: checkout.asset.assetTag, status: "PENDING_APPROVAL" },
+    });
+    return NextResponse.json({ ok: true, ticketId: ticket.id, needsApproval: true });
+  }
 
   await logAudit({
     tenantId,

@@ -9,6 +9,9 @@ import { z } from "zod";
 const schema = z.object({
   condition: z.string().optional(),
   locationId: z.string().nullable().optional(),
+  locationPath: z.string().nullable().optional(),
+  trolleyId: z.string().nullable().optional(),
+  projectId: z.string().nullable().optional(),
 });
 
 export async function PATCH(
@@ -47,10 +50,13 @@ export async function PATCH(
     return NextResponse.json({ message: "Not found" }, { status: 404 });
   }
 
-  const prev = { condition: asset.condition, locationId: asset.locationId };
+  const prev = { condition: asset.condition, locationId: asset.locationId, locationPath: asset.locationPath, trolleyId: asset.trolleyId };
   const updates: Record<string, unknown> = {};
   if (parsed.data.condition != null) updates.condition = parsed.data.condition;
   if (parsed.data.locationId !== undefined) updates.locationId = parsed.data.locationId;
+  if (parsed.data.locationPath !== undefined) updates.locationPath = parsed.data.locationPath;
+  if (parsed.data.trolleyId !== undefined) updates.trolleyId = parsed.data.trolleyId;
+  if (parsed.data.projectId !== undefined) updates.projectId = parsed.data.projectId;
 
   await prisma.asset.update({
     where: { id },

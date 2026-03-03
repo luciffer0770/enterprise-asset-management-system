@@ -26,27 +26,29 @@ export default async function EditAssetPage({
       tenantId,
       ...(role !== "ADMIN" && orgUnitIds.length && { ownerOrgUnitId: { in: orgUnitIds } }),
     },
-    include: { assetType: true },
+    include: { assetType: true, trolley: { include: { project: true } } },
   });
 
   if (!asset) notFound();
 
-  const [types, orgUnits, locations, pools] = await Promise.all([
+  const [types, orgUnits, locations, pools, trolleys] = await Promise.all([
     prisma.assetType.findMany({ where: { tenantId } }),
     prisma.orgUnit.findMany({ where: { tenantId } }),
     prisma.location.findMany({ where: { tenantId } }),
     prisma.inventoryPool.findMany({ where: { tenantId } }),
+    prisma.trolley.findMany({ where: { tenantId }, include: { project: true }, orderBy: { trolleyCode: "asc" } }),
   ]);
 
   return (
     <div className="max-w-xl space-y-6">
-      <h1 className="text-2xl font-semibold">Edit Asset</h1>
+      <h1 className="text-2xl font-semibold">Edit Tool</h1>
       <EditAssetForm
         asset={asset}
         types={types}
         orgUnits={orgUnits}
         locations={locations}
         pools={pools}
+        trolleys={trolleys}
       />
     </div>
   );

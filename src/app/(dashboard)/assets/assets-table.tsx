@@ -6,10 +6,12 @@ import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import type { Asset, AssetType, OrgUnit, Location, User } from "@prisma/client";
 
+type TrolleyWithProject = { trolleyCode: string; project: { name: string } };
 type AssetWithRelations = Asset & {
   assetType: AssetType;
   ownerOrgUnit: OrgUnit | null;
   location: Location | null;
+  trolley: TrolleyWithProject | null;
   assignedUser: User | null;
 };
 
@@ -22,7 +24,7 @@ export function AssetsTable({
 }) {
   function statusVariant(s: string) {
     if (["IN_SERVICE", "PASS"].includes(s)) return "success";
-    if (["CHECKED_OUT", "RESERVED", "OPEN"].includes(s)) return "info";
+    if (["CHECKED_OUT", "RESERVED", "OPEN", "RETURN_PENDING"].includes(s)) return "info";
     if (["UNDER_MAINTENANCE", "UNDER_CALIBRATION", "QUARANTINED"].includes(s))
       return "warning";
     if (["DISPOSED", "FAIL", "OOT"].includes(s)) return "error";
@@ -39,6 +41,7 @@ export function AssetsTable({
             <th>Status</th>
             <th>Org Unit</th>
             <th>Location</th>
+            <th>Trolley</th>
             <th>Assigned To</th>
             <th>Calibration Due</th>
             <th>NBV</th>
@@ -63,7 +66,8 @@ export function AssetsTable({
                 </Badge>
               </td>
               <td>{a.ownerOrgUnit?.name ?? "—"}</td>
-              <td>{a.location?.name ?? "—"}</td>
+              <td>{a.locationPath ?? a.location?.name ?? "—"}</td>
+              <td>{a.trolley ? `${a.trolley.trolleyCode} (${a.trolley.project.name})` : "—"}</td>
               <td>{a.assignedUser?.displayName ?? "—"}</td>
               <td className="text-sm text-[var(--text-2)]">
                 {/* Would need calibration join - simplified */}

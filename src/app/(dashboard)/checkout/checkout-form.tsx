@@ -101,7 +101,11 @@ export function CheckoutForm({
               {asset.assetType.name} — {asset.lifecycleState}
             </p>
 
-            {hasCheckout ? (
+            {asset.lifecycleState === "RETURN_PENDING" ? (
+              <p className="text-[var(--warning)] font-medium">
+                Return pending approval. An approver will review.
+              </p>
+            ) : hasCheckout ? (
               <form onSubmit={handleReturn}>
                 <Button type="submit" disabled={loading} variant="primary">
                   Mark as Returned

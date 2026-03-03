@@ -5,6 +5,7 @@ type Capability =
   | "assets:write"
   | "assets:all"
   | "checkout"
+  | "tickets:approve"
   | "reservations"
   | "workorders:read"
   | "workorders:write"
@@ -24,6 +25,7 @@ const ROLE_CAPABILITIES: Record<Role, Capability[]> = {
     "assets:write",
     "assets:all",
     "checkout",
+    "tickets:approve",
     "reservations",
     "workorders:read",
     "workorders:write",
@@ -33,9 +35,20 @@ const ROLE_CAPABILITIES: Record<Role, Capability[]> = {
     "finance:write",
     "audit:read",
     "audit:export",
-    "integrations",
     "switch-role",
     "users:manage",
+  ],
+  LAB_INCHARGE: [
+    "assets:read",
+    "assets:write",
+    "checkout",
+    "tickets:approve",
+    "reservations",
+    "workorders:read",
+    "workorders:write",
+    "calibration:read",
+    "finance:read",
+    "audit:read",
   ],
   MECHANICAL: [
     "assets:read",
@@ -61,6 +74,7 @@ const ROLE_CAPABILITIES: Record<Role, Capability[]> = {
   ],
   EXTERNAL: [
     "assets:read",
+    "checkout", // request tools via tickets
     "reservations",
     "workorders:read", // incident-only, creates WO
     "calibration:read",

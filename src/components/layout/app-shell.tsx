@@ -12,10 +12,10 @@ import {
   FlaskConical,
   DollarSign,
   FileText,
-  Settings,
   Menu,
   LogOut,
-  Scan,
+  ShoppingCart,
+  Ticket,
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -25,14 +25,14 @@ import type { Role } from "@/lib/utils";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, cap: "assets:read" as const },
-  { href: "/assets", label: "Assets", icon: Package, cap: "assets:read" as const },
-  { href: "/checkout", label: "Checkout", icon: ClipboardCheck, cap: "checkout" as const },
+  { href: "/assets", label: "Tools", icon: Package, cap: "assets:read" as const },
+  { href: "/trolleys", label: "Trolleys", icon: ShoppingCart, cap: "assets:read" as const },
+  { href: "/tickets", label: "Tickets", icon: Ticket, cap: "checkout" as const },
   { href: "/reservations", label: "Reservations", icon: Calendar, cap: "reservations" as const },
   { href: "/work-orders", label: "Work Orders", icon: Wrench, cap: "workorders:read" as const },
   { href: "/calibration", label: "Calibration", icon: FlaskConical, cap: "calibration:read" as const },
   { href: "/finance", label: "Depreciation", icon: DollarSign, cap: "finance:read" as const },
   { href: "/audit-logs", label: "Audit Logs", icon: FileText, cap: "audit:read" as const },
-  { href: "/integrations", label: "Integrations", icon: Settings, cap: "integrations" as const },
 ];
 
 export function AppShell({
@@ -81,13 +81,6 @@ export function AppShell({
               </Link>
             );
           })}
-          <Link
-            href="/mobile/scan"
-            className="flex items-center gap-3 px-3 py-2 rounded-[var(--radius-md)] text-sm font-medium text-[var(--text-1)] hover:bg-[var(--surface-2)]"
-          >
-            <Scan className="h-4 w-4 shrink-0" />
-            Mobile Scan
-          </Link>
         </nav>
       </aside>
 
@@ -127,6 +120,13 @@ export function AppShell({
       </aside>
 
       <main className="flex-1 flex flex-col md:ml-56 min-h-screen">
+        {/* Bosch-style supergraphic band */}
+        <div
+          className="h-1 w-full shrink-0"
+          style={{
+            background: "linear-gradient(90deg, var(--brand-red) 0%, var(--brand-dark-blue) 25%, var(--brand-light-blue) 50%, var(--brand-turquoise) 75%, var(--brand-light-green) 100%)",
+          }}
+        />
         {/* Top bar */}
         <header className="h-12 flex items-center justify-between px-4 border-b border-[var(--border)] bg-[var(--surface-0)] sticky top-0 z-30">
           <button
@@ -166,11 +166,11 @@ export function AppShell({
           </Link>
           <Link href="/assets" className="flex flex-col items-center text-xs">
             <Package className="h-5 w-5 mb-1" />
-            Assets
+            Tools
           </Link>
-          <Link href="/mobile/scan" className="flex flex-col items-center text-xs">
-            <Scan className="h-5 w-5 mb-1" />
-            Scan
+          <Link href="/tickets" className="flex flex-col items-center text-xs">
+            <Ticket className="h-5 w-5 mb-1" />
+            Tickets
           </Link>
           <Link href="/work-orders" className="flex flex-col items-center text-xs">
             <Wrench className="h-5 w-5 mb-1" />

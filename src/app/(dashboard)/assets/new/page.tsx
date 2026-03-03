@@ -16,21 +16,23 @@ export default async function NewAssetPage() {
   const tenantId = (session?.user as { tenantId?: string })?.tenantId ?? "";
   const orgUnitIds = (session?.user as { orgUnitIds?: string[] })?.orgUnitIds ?? [];
 
-  const [types, orgUnits, locations, pools] = await Promise.all([
+  const [types, orgUnits, locations, pools, trolleys] = await Promise.all([
     prisma.assetType.findMany({ where: { tenantId } }),
     prisma.orgUnit.findMany({ where: { tenantId } }),
     prisma.location.findMany({ where: { tenantId } }),
     prisma.inventoryPool.findMany({ where: { tenantId } }),
+    prisma.trolley.findMany({ where: { tenantId }, include: { project: true }, orderBy: { trolleyCode: "asc" } }),
   ]);
 
   return (
     <div className="max-w-xl space-y-6">
-      <h1 className="text-2xl font-semibold">Add Asset</h1>
+      <h1 className="text-2xl font-semibold">Add Tool</h1>
       <NewAssetForm
         types={types}
         orgUnits={orgUnits}
         locations={locations}
         pools={pools}
+        trolleys={trolleys}
       />
     </div>
   );

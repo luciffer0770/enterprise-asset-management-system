@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { AssetsTable } from "./assets-table";
 import { AssetFilters } from "./asset-filters";
+import { AssetImportExport } from "./asset-import-export";
 import { hasCapability } from "@/lib/permissions";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -48,35 +49,67 @@ export default async function AssetsPage({
     }),
   };
 
-  const [assets, orgUnits, types] = await Promise.all([
+  const [assets, orgUnits, types, totalCount, availableCount, issuedCount, calibrationDueCount] = await Promise.all([
     prisma.asset.findMany({
       where,
       include: {
         assetType: true,
         ownerOrgUnit: true,
         location: true,
+        trolley: { include: { project: true } },
         assignedUser: true,
       },
       take: 500,
     }),
     prisma.orgUnit.findMany({ where: { tenantId } }),
     prisma.assetType.findMany({ where: { tenantId } }),
+    prisma.asset.count({ where: baseWhere }),
+    prisma.asset.count({ where: { ...baseWhere, lifecycleState: "IN_SERVICE" } }),
+    prisma.asset.count({ where: { ...baseWhere, lifecycleState: "CHECKED_OUT" } }),
+    prisma.calibrationEvent.count({
+      where: {
+        asset: baseWhere,
+        nextDueDate: { lte: new Date(Date.now() + 30 * 86400000) },
+      },
+    }),
   ]);
 
   const canWrite = hasCapability(role, "assets:write");
 
+  const kpis = [
+    { label: "Total Tools", value: totalCount, color: "text-[var(--brand-dark-blue)]" },
+    { label: "Available", value: availableCount, color: "text-[var(--success)]" },
+    { label: "Issued", value: issuedCount, color: "text-[var(--brand-red)]" },
+    { label: "Calibration Due", value: calibrationDueCount, color: "text-[var(--warning)]" },
+  ];
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <h1 className="text-2xl font-semibold">Asset Registry</h1>
-        {canWrite && (
-          <Button asChild>
-            <Link href="/assets/new">
-              <Plus className="h-4 w-4 mr-2" />
-              Add Asset
-            </Link>
-          </Button>
-        )}
+        <h1 className="text-2xl font-semibold">Tool Management</h1>
+        <div className="flex items-center gap-2">
+          <AssetImportExport canWrite={canWrite} />
+          {canWrite && (
+            <Button asChild className="bg-[var(--brand-red)] hover:bg-[var(--brand-red)]/90">
+              <Link href="/assets/new">
+                <Plus className="h-4 w-4 mr-2" />
+                Add Tool
+              </Link>
+            </Button>
+          )}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {kpis.map((k) => (
+          <div
+            key={k.label}
+            className="rounded-lg border border-[var(--border)] p-4 bg-[var(--surface-0)]"
+          >
+            <p className="text-sm text-[var(--text-2)]">{k.label}</p>
+            <p className={`text-2xl font-bold mt-1 ${k.color}`}>{k.value}</p>
+          </div>
+        ))}
       </div>
 
       <Suspense fallback={<div className="h-10" />}>

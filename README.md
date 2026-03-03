@@ -36,15 +36,15 @@ Click the role buttons for one-click sign in.
 ## Pages
 
 - `/dashboard` - KPIs
-- `/assets` - Asset registry
-- `/checkout` - Checkout/return
+- `/assets` - Tool management (with KPI tiles, import/export)
+- `/trolleys` - Trolley management (tools assigned to project trolleys)
+- `/tickets` - Ticket queue (issue/return with approval workflow)
+- `/checkout` - Issue/return tools (linked from Tickets)
 - `/reservations` - Calendar
 - `/work-orders` - Kanban
 - `/calibration` - Due/overdue
 - `/finance` - Depreciation
 - `/audit-logs` - Event log
-- `/integrations` - Connectors (Admin)
-- `/mobile/scan` - Scan flow
 
 ## Scripts
 
