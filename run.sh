@@ -1,16 +1,14 @@
 #!/bin/bash
 # Run the Industrial Tooling Management app (cloud workspace)
+# Tool and trolley management with tickets, KPIs, Excel import/export
 set -e
 cd "$(dirname "$0")"
 
 echo "Installing dependencies..."
 npm install
 
-echo "Applying database migrations..."
-npm run db:migrate
-
-echo "Seeding demo data..."
-npm run db:seed
+echo "Setting up database (migrations + seed)..."
+npm run setup
 
 echo ""
 echo "Starting dev server..."

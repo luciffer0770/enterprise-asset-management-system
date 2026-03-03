@@ -1,6 +1,8 @@
 # Run the Tool Online – One-Click Links
 
-Use these links to open and run the app in your browser. You can edit the code and see changes live.
+Tool and trolley management with tickets, KPIs, Excel import/export. Use these links to open and run the app in your browser. You can edit the code and see changes live.
+
+**Branch:** Use `cursor/industrial-tooling-management-1b99` for the latest (trolleys, tickets, tools).
 
 ---
 

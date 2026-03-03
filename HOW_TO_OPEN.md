@@ -1,6 +1,6 @@
 # Open the App (No Terminal Needed)
 
-The app is already running. Use these steps:
+Tool and trolley management with tickets, KPIs, Excel import/export. The app is already running. Use these steps:
 
 ---
 

@@ -15,7 +15,6 @@ type Capability =
   | "finance:write"
   | "audit:read"
   | "audit:export"
-  | "integrations"
   | "switch-role"
   | "users:manage";
 

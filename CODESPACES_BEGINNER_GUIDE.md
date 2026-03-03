@@ -1,6 +1,6 @@
 # Run the Tool Online – Beginner Guide (GitHub Codespaces)
 
-Follow these steps one by one.
+Tool and trolley management with tickets, KPIs, and Excel import/export. Follow these steps one by one.
 
 ---
 
@@ -12,12 +12,13 @@ Follow these steps one by one.
 
 ---
 
-## Step 2: Create a Codespace
+## Step 2: Create a Codespace (use latest branch)
 
 1. Click the green **"Code"** button (near the top right).
 2. In the menu, click the **"Codespaces"** tab.
-3. Click **"Create codespace on main"** (or on the branch with the latest code).
-4. Wait 1–2 minutes. A new tab will open with an editor that looks like VS Code.
+3. Click the branch dropdown and select **`cursor/industrial-tooling-management-1b99`** (has trolleys, tickets, tools).
+4. Click **"Create codespace on cursor/industrial-tooling-management-1b99"**.
+5. Wait 1–2 minutes. A new tab will open with an editor that looks like VS Code.
 
 ---
 
@@ -65,10 +66,13 @@ Leave this running. You should see **"✓ Ready"** after a few seconds.
 
 ---
 
-## Step 6: Log in
+## Step 6: Log in and explore
 
-1. On the login page, click the **"Admin"** button.
-2. Or type: **admin@demo.com** and password **demo123**.
+1. On the login page, click **Admin**, **Mechanical**, **Electrical**, or **External** (or type `admin@demo.com` / `demo123`).
+2. You’ll land on the dashboard. Use the sidebar to open:
+   - **Tools** – add tools, export/import Excel
+   - **Trolleys** – project trolleys with assigned tools
+   - **Tickets** – issue/return workflow, approve pending returns
 
 ---
 

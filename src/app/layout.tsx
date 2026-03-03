@@ -7,7 +7,7 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 export const metadata: Metadata = {
   title: "Industrial Tooling & Asset Management",
-  description: "Tooling and asset management prototype",
+  description: "Tool and trolley management with tickets, KPIs, and Excel import/export",
 };
 
 export default function RootLayout({

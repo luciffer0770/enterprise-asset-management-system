@@ -1,6 +1,6 @@
 # Login Not Working / Not Crossing Login Page
 
-If you can see the login page but it doesn't go to the dashboard after signing in, try these steps.
+If you can see the login page but it doesn’t go to the dashboard after signing in, try these steps. This applies to the Tool and Trolley Management app (tickets, KPIs, Excel import/export).
 
 ## 1. Use the correct URL (most common fix)
 

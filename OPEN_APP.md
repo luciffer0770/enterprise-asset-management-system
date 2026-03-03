@@ -1,14 +1,17 @@
 # How to Open the Tooling Management App (Cloud Workspace)
 
+Tool and trolley management with tickets, KPIs, and Excel import/export.
+
 ## 1. Start the app (run from project folder: `/workspace`)
 
 ```bash
 cd /workspace
 npm install
-npm run db:migrate
-npm run db:seed
+npm run setup
 npm run dev
 ```
+
+**Note:** Use `npm run setup` (it runs migrations and seeds). Do not use `db:migrate` + `db:seed` separately.
 
 Wait until you see: `✓ Ready in ...` — check the output: **Local: http://localhost:3000** or **http://localhost:3001** (if 3000 is busy).
 

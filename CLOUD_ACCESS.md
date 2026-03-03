@@ -1,6 +1,6 @@
 # Access the Tool in Cursor Cloud – Fix "Request Could Not Be Routed"
 
-Cursor's built-in port forwarding can fail with "The request could not be routed." Use **localtunnel** instead to get a public URL that works reliably.
+Tool and trolley management with tickets, KPIs, Excel import/export. Cursor's built-in port forwarding can fail with "The request could not be routed." Use **localtunnel** instead to get a public URL that works reliably (if not blocked by your org).
 
 ## Option A: Run with tunnel (recommended for cloud)
 

@@ -1,5 +1,7 @@
 # Why "Request Could Not Be Routed" Appears
 
+*Tool and trolley management with tickets, KPIs, Excel import/export.*
+
 ## The Cause
 
 This message comes from **Cursor's port forwarding**, not from the app.

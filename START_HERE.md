@@ -1,6 +1,6 @@
 # Run the Tool in Cursor Cloud (No Third-Party Sites)
 
-The app runs in this workspace. Use only Cursor's built-in viewer.
+Tool and trolley management with tickets, KPIs, and Excel import/export. The app runs in this workspace. Use only Cursor's built-in viewer.
 
 ## Step 1: Start the server
 

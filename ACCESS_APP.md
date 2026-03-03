@@ -1,6 +1,6 @@
 # Access the App in Cursor Cloud
 
-The app is running on **port 3000** inside this workspace.
+Tool and trolley management with tickets, KPIs, Excel import/export. The app runs on **port 3000** inside this workspace.
 
 ## If "Site can't be reached"
 
