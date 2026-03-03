@@ -88,6 +88,7 @@ Leave this running. You should see **"✓ Ready"** after a few seconds.
 ## If something goes wrong
 
 - **"prisma: not found"** or **"next: not found"** – Run `npm install` first, wait for it to finish, then run `npm run setup` and `npm run dev` again.
+- **"Environment variable not found: DATABASE_URL"** – Run `npm run setup` first (it creates `.env`). Then run `npm run dev`.
 - **Login works but then "Error"** – Always use the URL from the Ports globe (e.g. `https://xxx-3000.app.github.dev`), not localhost. Clear cookies for the site, then log in again.
 - **"Command not found"** – Make sure you pasted the command exactly and pressed Enter.
 - **Port 3000 not showing** – If port 3000 was in use, the app may run on **3001** instead. Check both ports in the Ports tab.

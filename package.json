@@ -3,11 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "node scripts/dev-with-fallback.js",
+    "dev": "node scripts/ensure-env.js && node scripts/dev-with-fallback.js",
     "dev:3000": "npx next dev -H 0.0.0.0 -p 3000",
     "dev:3001": "npx next dev -H 0.0.0.0 -p 3001",
     "dev:8080": "npx next dev -H 0.0.0.0 -p 8080",
-    "setup": "npx prisma generate && npx prisma migrate deploy && npx tsx prisma/seed.ts",
+    "setup": "node scripts/ensure-env.js && npx prisma generate && npx prisma migrate deploy && npx tsx prisma/seed.ts",
     "tunnel": "npx localtunnel --port 3000",
     "dev:cloud": "npm run setup && npm run dev & sleep 8 && npm run tunnel",
     "build": "npx next build",
