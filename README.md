@@ -25,6 +25,13 @@ npm run dev
 
 **Note:** Use `npm run setup` (not `db:migrate` + `db:seed`). It creates `.env`, runs migrations, and seeds the database.
 
+**If setup fails with "column does not exist" or migration errors:** Reset the database:
+```bash
+rm -f prisma/dev.db
+npm run setup
+npm run dev
+```
+
 Open the app:
 - **Ports panel**: Ports tab → Open in Browser for port 3000 (or 3001)
 - **Simple Browser**: `Ctrl+Shift+P` → "Simple Browser" → `http://localhost:3000`
