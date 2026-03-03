@@ -32,14 +32,16 @@ export async function POST(req: NextRequest) {
   const userId = (session.user as { id?: string })?.id ?? "";
 
   let projectId = parsed.data.projectId;
-  if (!projectId && parsed.data.projectName) {
-    const proj = await prisma.project.create({
-      data: { tenantId, name: parsed.data.projectName.trim() },
-    });
+  if (!projectId && parsed.data.projectName?.trim()) {
+    const name = parsed.data.projectName.trim();
+    let proj = await prisma.project.findFirst({ where: { tenantId, name } });
+    if (!proj) {
+      proj = await prisma.project.create({ data: { tenantId, name } });
+    }
     projectId = proj.id;
   }
   if (!projectId) {
-    return NextResponse.json({ message: "Project required" }, { status: 400 });
+    return NextResponse.json({ message: "Project name required" }, { status: 400 });
   }
 
   const existing = await prisma.trolley.findFirst({

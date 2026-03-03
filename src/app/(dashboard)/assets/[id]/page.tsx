@@ -6,7 +6,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, ClipboardCheck, Calendar, Wrench } from "lucide-react";
+import { ArrowLeft, ClipboardCheck, Calendar, Wrench, Ticket } from "lucide-react";
 import { canAccessAsset, hasCapability } from "@/lib/permissions";
 
 export default async function AssetDetailPage({
@@ -149,21 +149,27 @@ export default async function AssetDetailPage({
         <div className="space-y-4">
           {canCheckout && asset.lifecycleState === "IN_SERVICE" && (
             <Card>
-              <CardContent className="pt-4">
+              <CardContent className="pt-4 space-y-2">
+                <Button className="w-full" asChild>
+                  <Link href={`/tickets?q=${encodeURIComponent(asset.assetTag)}`}>
+                    <Ticket className="h-4 w-4 mr-2" />
+                    View Tickets
+                  </Link>
+                </Button>
                 <Button className="w-full" asChild>
                   <Link href={`/checkout?assetId=${asset.id}`}>
                     <ClipboardCheck className="h-4 w-4 mr-2" />
                     Checkout
                   </Link>
                 </Button>
-                <Button variant="secondary" className="w-full mt-2" asChild>
+                <Button variant="secondary" className="w-full" asChild>
                   <Link href={`/reservations/new?assetId=${asset.id}`}>
                     <Calendar className="h-4 w-4 mr-2" />
                     Reserve
                   </Link>
                 </Button>
                 {hasCapability(role, "workorders:write") && (
-                  <Button variant="secondary" className="w-full mt-2" asChild>
+                  <Button variant="secondary" className="w-full" asChild>
                     <Link href={`/work-orders/new?assetId=${asset.id}`}>
                       <Wrench className="h-4 w-4 mr-2" />
                       Create Work Order

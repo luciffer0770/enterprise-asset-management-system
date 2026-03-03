@@ -2,7 +2,7 @@ import { prisma } from "@/lib/db";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { hasCapability } from "@/lib/permissions";
-import { TicketsPageClient, type TicketRow } from "./tickets-page-client";
+import { TicketsClient, type TicketRow } from "./tickets-client";
 
 function fmt(d: Date | null) {
   return d ? new Date(d).toLocaleDateString("en-US", { month: "2-digit", day: "2-digit", year: "numeric" }) : null;
@@ -11,10 +11,9 @@ function fmt(d: Date | null) {
 export default async function TicketsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string }>;
+  searchParams: Promise<{ [key: string]: string | undefined }>;
 }) {
   const params = await searchParams;
-  const initialStatus = params.status === "pending" ? "PENDING" : params.status === "active" ? "ISSUED" : params.status === "overdue" ? "OVERDUE" : params.status === "closed" ? "CLOSED" : "all";
   const session = await getServerSession(authOptions);
   const role = (session?.user as { role?: string })?.role ?? "EXTERNAL";
   if (!hasCapability(role, "checkout")) {
@@ -30,6 +29,7 @@ export default async function TicketsPage({
   const orgUnitIds = (session?.user as { orgUnitIds?: string[] })?.orgUnitIds ?? [];
   const now = new Date();
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
   const assetWhere =
     role === "ADMIN" || role === "LAB_INCHARGE"
@@ -53,7 +53,7 @@ export default async function TicketsPage({
         trolley: { include: { project: true } },
       },
       orderBy: { createdAt: "desc" },
-      take: 200,
+      take: 300,
     }),
     prisma.checkout.findMany({
       where: { asset: { tenantId } },
@@ -64,7 +64,7 @@ export default async function TicketsPage({
         trolley: { include: { project: true } },
       },
       orderBy: { checkedOutAt: "desc" },
-      take: 200,
+      take: 300,
     }),
     prisma.returnTicket.findMany({
       where: { checkout: { asset: { tenantId } } },
@@ -79,7 +79,7 @@ export default async function TicketsPage({
         raisedBy: true,
       },
       orderBy: { createdAt: "desc" },
-      take: 200,
+      take: 300,
     }),
     prisma.asset.findMany({
       where: { ...assetWhere, lifecycleState: "IN_SERVICE", trolleyId: null },
@@ -93,10 +93,8 @@ export default async function TicketsPage({
     }),
   ]);
 
-  // Build unified ticket list
   const tickets: TicketRow[] = [];
 
-  // Issue requests (pending only for display, we can show approved/rejected too)
   for (const ir of issueRequests) {
     tickets.push({
       id: ir.id,
@@ -112,15 +110,14 @@ export default async function TicketsPage({
       purpose: ir.reason,
       issueDate: fmt(ir.createdAt) ?? "—",
       condition: "—",
+      assetId: ir.assetId,
     });
   }
 
-  // Checkouts (active = issued, overdue = past due) - skip if pending return (we show return ticket row instead)
   for (const c of checkouts) {
     if (c.returnedAt) continue;
     if (c.returnTicket?.status === "PENDING_APPROVAL") continue;
     const isOverdue = c.dueDate && c.dueDate < now;
-    const status: TicketRow["status"] = isOverdue ? "OVERDUE" : "ISSUED";
     tickets.push({
       id: c.id,
       type: "checkout",
@@ -131,7 +128,7 @@ export default async function TicketsPage({
       raisedBy: c.borrowerName ?? c.borrower.displayName,
       department: c.trolley?.department ?? c.asset.ownerOrgUnit?.name ?? "—",
       expectedReturn: fmt(c.dueDate),
-      status,
+      status: isOverdue ? "OVERDUE" : "ISSUED",
       purpose: c.reason ?? undefined,
       issueDate: fmt(c.checkedOutAt) ?? "—",
       condition: c.conditionOut ?? "Good",
@@ -139,11 +136,10 @@ export default async function TicketsPage({
     });
   }
 
-  // Return tickets (pending and closed)
   for (const rt of returnTickets) {
     const c = rt.checkout;
-    const isClosed = ["APPROVED", "CLOSED"].includes(rt.status);
     const isPending = rt.status === "PENDING_APPROVAL";
+    const isClosed = ["APPROVED", "CLOSED"].includes(rt.status);
     if (!isPending && !isClosed) continue;
     tickets.push({
       id: rt.id,
@@ -164,48 +160,67 @@ export default async function TicketsPage({
     });
   }
 
-  // Sort by most recent first
   tickets.sort((a, b) => {
     const da = a.issueDate ?? "";
     const db = b.issueDate ?? "";
     return db.localeCompare(da);
   });
 
-  const activeCount = checkouts.filter((c) => !c.returnedAt).length;
+  const overdueCount = checkouts.filter((c) => !c.returnedAt && c.dueDate && c.dueDate < now).length;
   const pendingIssueCount = issueRequests.filter((ir) => ir.status === "PENDING_APPROVAL").length;
   const pendingReturnCount = returnTickets.filter((rt) => rt.status === "PENDING_APPROVAL").length;
-  const overdueCount = checkouts.filter(
-    (c) => !c.returnedAt && c.dueDate && c.dueDate < now
+  const activeCount = checkouts.filter((c) => !c.returnedAt).length;
+  const openCount = activeCount + pendingIssueCount + pendingReturnCount;
+  const resolvedThisMonth = returnTickets.filter(
+    (rt) => ["APPROVED", "CLOSED"].includes(rt.status) && rt.closedAt && rt.closedAt >= monthStart
   ).length;
-  const closedTodayCount = returnTickets.filter(
-    (rt) =>
-      ["APPROVED", "CLOSED"].includes(rt.status) &&
-      rt.closedAt &&
-      rt.closedAt >= todayStart
-  ).length;
+
+  const typeData = [
+    { name: "Issue Request", value: tickets.filter((t) => t.type === "issue_request").length },
+    { name: "Checkout", value: tickets.filter((t) => t.type === "checkout").length },
+    { name: "Return", value: tickets.filter((t) => t.type === "return_ticket").length },
+  ].filter((d) => d.value > 0);
+  if (typeData.length === 0) typeData.push({ name: "No data", value: 1 });
+
+  const statusData = [
+    { name: "Pending", value: tickets.filter((t) => t.status === "PENDING").length, color: "#f59e0b" },
+    { name: "Issued", value: tickets.filter((t) => t.status === "ISSUED").length, color: "#8b5cf6" },
+    { name: "Overdue", value: tickets.filter((t) => t.status === "OVERDUE").length, color: "#ef4444" },
+    { name: "Closed", value: tickets.filter((t) => t.status === "CLOSED").length, color: "#10b981" },
+  ].filter((s) => s.value > 0);
+  if (statusData.length === 0) statusData.push({ name: "No data", value: 1, color: "#94a3b8" });
 
   const requestedAssetIds = new Set(
     issueRequests.filter((ir) => ir.status === "PENDING_APPROVAL").map((ir) => ir.assetId)
   );
   const availableAssets = inServiceAssets.filter((a) => !requestedAssetIds.has(a.id));
 
+  const page = Math.max(1, parseInt(params.page ?? "1", 10) || 1);
+  const pageSize = Math.min(50, Math.max(10, parseInt(params.pageSize ?? "20", 10) || 20));
+
   return (
-    <TicketsPageClient
-      initialStatusFilter={initialStatus}
+    <TicketsClient
       tickets={tickets}
       kpis={{
-        active: activeCount,
+        open: openCount,
         pending: pendingIssueCount + pendingReturnCount,
-        issued: activeCount,
         overdue: overdueCount,
-        closedToday: closedTodayCount,
+        resolvedMonth: resolvedThisMonth,
+        highPriority: overdueCount,
       }}
-        canApprove={hasCapability(role, "tickets:approve")}
-        canReturn={hasCapability(role, "checkout")}
-        canClose={role === "ADMIN"}
+      typeData={typeData}
+      statusData={statusData}
       availableAssets={availableAssets}
       trolleys={trolleys}
+      canApprove={hasCapability(role, "tickets:approve")}
+      canReturn={hasCapability(role, "checkout")}
+      canClose={role === "ADMIN"}
+      canCreateWO={hasCapability(role, "workorders:write")}
       role={role}
+      totalCount={tickets.length}
+      page={page}
+      pageSize={pageSize}
+      params={params as Record<string, string | undefined>}
     />
   );
 }

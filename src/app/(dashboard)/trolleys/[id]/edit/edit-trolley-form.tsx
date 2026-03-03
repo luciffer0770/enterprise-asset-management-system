@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -14,25 +15,27 @@ import {
 
 export function EditTrolleyForm({
   trolley,
-  projects,
 }: {
-  trolley: { id: string; trolleyCode: string; projectId: string; department: string; status: string };
-  projects: { id: string; name: string }[];
+  trolley: { id: string; trolleyCode: string; projectId: string; project: { name: string }; department: string; status: string };
 }) {
   const router = useRouter();
-  const [projectId, setProjectId] = useState(trolley.projectId);
+  const [projectName, setProjectName] = useState(trolley.project?.name ?? "");
   const [department, setDepartment] = useState(trolley.department);
   const [status, setStatus] = useState(trolley.status);
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!projectName.trim()) {
+      alert("Project name is required");
+      return;
+    }
     setLoading(true);
     try {
       const res = await fetch(`/api/trolleys/${trolley.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ projectId, department, status }),
+        body: JSON.stringify({ projectName: projectName.trim(), department, status }),
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
@@ -55,19 +58,15 @@ export function EditTrolleyForm({
         <p className="font-medium mt-1">{trolley.trolleyCode}</p>
       </div>
       <div>
-        <Label>Project</Label>
-        <Select value={projectId} onValueChange={setProjectId}>
-          <SelectTrigger className="mt-1">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {projects.map((p) => (
-              <SelectItem key={p.id} value={p.id}>
-                {p.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <Label htmlFor="project">Project Name *</Label>
+        <Input
+          id="project"
+          value={projectName}
+          onChange={(e) => setProjectName(e.target.value)}
+          placeholder="e.g. GE90-112 Overhaul"
+          required
+          className="mt-1"
+        />
       </div>
       <div>
         <Label>Department</Label>

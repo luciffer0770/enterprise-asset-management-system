@@ -8,6 +8,7 @@ import { z } from "zod";
 
 const schema = z.object({
   projectId: z.string().optional(),
+  projectName: z.string().optional(),
   department: z.enum(["Mechanical", "Electrical"]).optional(),
   status: z.enum(["ACTIVE", "INACTIVE"]).optional(),
 });
@@ -44,8 +45,18 @@ export async function PATCH(
     return NextResponse.json({ message: "Not found" }, { status: 404 });
   }
 
+  let projectId = parsed.data.projectId;
+  if (parsed.data.projectName !== undefined && parsed.data.projectName.trim()) {
+    const name = parsed.data.projectName.trim();
+    let proj = await prisma.project.findFirst({ where: { tenantId, name } });
+    if (!proj) {
+      proj = await prisma.project.create({ data: { tenantId, name } });
+    }
+    projectId = proj.id;
+  }
+
   const updates: Record<string, unknown> = {};
-  if (parsed.data.projectId != null) updates.projectId = parsed.data.projectId;
+  if (projectId != null) updates.projectId = projectId;
   if (parsed.data.department != null) updates.department = parsed.data.department;
   if (parsed.data.status != null) updates.status = parsed.data.status;
 

@@ -46,7 +46,7 @@ export default async function TrolleysPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <h1 className="text-2xl font-semibold">Trolley Management</h1>
+        <h1 className="text-2xl font-semibold">Engine Trolley Management</h1>
         {canEdit && (
           <Button asChild className="bg-[var(--brand-red)] hover:bg-[var(--brand-red)]/90">
             <Link href="/trolleys/new">Add New Trolley</Link>

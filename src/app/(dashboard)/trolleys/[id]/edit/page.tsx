@@ -26,18 +26,13 @@ export default async function EditTrolleyPage({
 
   if (!trolley) notFound();
 
-  const projects = await prisma.project.findMany({
-    where: { tenantId },
-    orderBy: { name: "asc" },
-  });
-
   return (
     <div className="max-w-xl space-y-6">
       <h1 className="text-2xl font-semibold">Edit Trolley</h1>
       <p className="text-sm text-[var(--text-2)]">
-        Edit trolley details only. Tool assignment is done via the Tickets/Issue flow.
+        Edit trolley details. You can assign/remove tools on the trolley detail page.
       </p>
-      <EditTrolleyForm trolley={trolley} projects={projects} />
+      <EditTrolleyForm trolley={trolley} />
     </div>
   );
 }

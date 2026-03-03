@@ -13,20 +13,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-export function NewTrolleyForm({
-  projects,
-  tenantId,
-  role,
-}: {
-  projects: { id: string; name: string }[];
-  tenantId: string;
-  role: string;
-}) {
+export function NewTrolleyForm() {
   const router = useRouter();
-  const NONE = "__none__";
   const [trolleyCode, setTrolleyCode] = useState("");
   const [projectName, setProjectName] = useState("");
-  const [projectId, setProjectId] = useState(NONE);
   const [department, setDepartment] = useState("Mechanical");
   const [loading, setLoading] = useState(false);
 
@@ -36,10 +26,8 @@ export function NewTrolleyForm({
       alert("Trolley code required");
       return;
     }
-    const projId = projectId === NONE ? null : projectId;
-    const projName = projectName.trim();
-    if (!projId && !projName) {
-      alert("Select a project or enter a new project name");
+    if (!projectName.trim()) {
+      alert("Project name required");
       return;
     }
     setLoading(true);
@@ -49,8 +37,7 @@ export function NewTrolleyForm({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           trolleyCode: trolleyCode.trim(),
-          projectId: projId ?? undefined,
-          projectName: projName || undefined,
+          projectName: projectName.trim(),
           department,
         }),
       });
@@ -77,34 +64,21 @@ export function NewTrolleyForm({
           id="code"
           value={trolleyCode}
           onChange={(e) => setTrolleyCode(e.target.value)}
-          placeholder="TR-009"
+          placeholder="e.g. ENG-TR-101"
           required
           className="mt-1"
         />
       </div>
       <div>
-        <Label>Project</Label>
-        <Select value={projectId} onValueChange={setProjectId}>
-          <SelectTrigger className="mt-1">
-            <SelectValue placeholder="Select or add new below" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={NONE}>New project (enter name below)</SelectItem>
-            {projects.map((p) => (
-              <SelectItem key={p.id} value={p.id}>
-                {p.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {projectId === NONE && (
-          <Input
-            value={projectName}
-            onChange={(e) => setProjectName(e.target.value)}
-            placeholder="New project name"
-            className="mt-2"
-          />
-        )}
+        <Label htmlFor="project">Project Name *</Label>
+        <Input
+          id="project"
+          value={projectName}
+          onChange={(e) => setProjectName(e.target.value)}
+          placeholder="e.g. GE90-112 Overhaul"
+          required
+          className="mt-1"
+        />
       </div>
       <div>
         <Label>Department</Label>

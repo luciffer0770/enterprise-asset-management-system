@@ -14,7 +14,7 @@ import {
   FileText,
   Menu,
   LogOut,
-  ShoppingCart,
+  Fuel,
   Ticket,
 } from "lucide-react";
 import { useState } from "react";
@@ -26,7 +26,7 @@ import type { Role } from "@/lib/utils";
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, cap: "assets:read" as const },
   { href: "/assets", label: "Tools", icon: Package, cap: "assets:read" as const },
-  { href: "/trolleys", label: "Trolleys", icon: ShoppingCart, cap: "trolleys" as const },
+  { href: "/trolleys", label: "Trolleys", icon: Fuel, cap: "trolleys" as const },
   { href: "/tickets", label: "Tickets", icon: Ticket, cap: "checkout" as const },
   { href: "/reservations", label: "Reservations", icon: Calendar, cap: "reservations" as const },
   { href: "/work-orders", label: "Work Orders", icon: Wrench, cap: "workorders:read" as const },

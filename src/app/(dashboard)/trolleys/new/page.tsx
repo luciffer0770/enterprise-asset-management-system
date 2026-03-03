@@ -14,21 +14,13 @@ export default async function NewTrolleyPage() {
     );
   }
 
-  const tenantId = (session?.user as { tenantId?: string })?.tenantId ?? "";
-  const orgUnitIds = (session?.user as { orgUnitIds?: string[] })?.orgUnitIds ?? [];
-
-  const projects = await prisma.project.findMany({
-    where: { tenantId },
-    orderBy: { name: "asc" },
-  });
-
   return (
     <div className="max-w-xl space-y-6">
       <h1 className="text-2xl font-semibold">Add New Trolley</h1>
       <p className="text-sm text-[var(--text-2)]">
-        Add a trolley for a new or existing project. Admin, Mechanical, and Electrical can add trolleys.
+        Enter trolley code and project name. Trolleys are shared by Mechanical and Electrical.
       </p>
-      <NewTrolleyForm projects={projects} tenantId={tenantId} role={role} />
+      <NewTrolleyForm />
     </div>
   );
 }
