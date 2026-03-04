@@ -1,0 +1,345 @@
+// Industrial Tooling & Asset Management - Prisma Schema
+// Multi-tenant model with RBAC
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ============ MULTI-TENANT & ORG ============
+
+model Tenant {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+  orgUnits  OrgUnit[]
+  users     User[]
+  locations Location[]
+  projects  Project[]
+  pools     InventoryPool[]
+  assets    Asset[]
+  assetTypes AssetType[]
+  auditLogs AuditLogEvent[]
+  returnTickets ReturnTicket[]
+  integrations IntegrationConfig[]
+}
+
+model Project {
+  id        String   @id @default(cuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  name      String   // e.g. "Project Alpha", "Alpha Plant"
+  code      String?  // e.g. "ALPHA"
+  createdAt DateTime @default(now())
+  trolleys  InventoryPool[]
+}
+
+model OrgUnit {
+  id        String   @id @default(cuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  name      String
+  kind      String   // mechanical, electrical, admin, external
+  createdAt DateTime @default(now())
+  assets    Asset[]
+  userOrgs  UserOrgUnit[]
+}
+
+model UserOrgUnit {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orgUnitId String
+  orgUnit   OrgUnit  @relation(fields: [orgUnitId], references: [id], onDelete: Cascade)
+  @@unique([userId, orgUnitId])
+}
+
+model Location {
+  id        String   @id @default(cuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  name      String
+  path      String?  // hierarchical path
+  createdAt DateTime @default(now())
+  assets    Asset[]
+}
+
+model InventoryPool {
+  id        String   @id @default(cuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  projectId String?
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  name      String
+  code      String?  // e.g. TR-001 for display
+  kind      String?  // Mechanical, Electrical (department)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  assets    Asset[]
+  checkouts Checkout[]
+  reservations Reservation[]
+}
+
+// ============ USERS & AUTH ============
+
+model User {
+  id           String    @id @default(cuid())
+  tenantId     String
+  tenant       Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  email        String
+  displayName  String
+  passwordHash String?
+  role         String    // ADMIN, LAB_INCHARGE, MECHANICAL, ELECTRICAL, EXTERNAL
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  userOrgs     UserOrgUnit[]
+  assignedAssets Asset[]  @relation("AssignedTo")
+  checkouts    Checkout[]
+  reservations Reservation[]
+  workOrders   WorkOrder[]
+  auditLogs    AuditLogEvent[]
+  ticketApprovals TicketApproval[]
+  returnTicketsApproved ReturnTicket[]
+  @@unique([tenantId, email])
+}
+
+// ============ ASSET TYPES & ASSETS ============
+
+model AssetType {
+  id                 String   @id @default(cuid())
+  tenantId           String
+  tenant             Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  name               String
+  category           String   // tool, instrument, machine, IT, vehicle, kit, consumable
+  requiresCalibration Boolean @default(false)
+  assets             Asset[]
+}
+
+model Asset {
+  id               String    @id @default(cuid())
+  tenantId         String
+  tenant           Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  assetTypeId      String
+  assetType        AssetType @relation(fields: [assetTypeId], references: [id])
+  assetTag         String
+  serialNumber     String?
+  lifecycleState   String    // enum values
+  ownerOrgUnitId   String?
+  ownerOrgUnit     OrgUnit?  @relation(fields: [ownerOrgUnitId], references: [id])
+  locationId       String?
+  location         Location? @relation(fields: [locationId], references: [id])
+  poolId           String?
+  pool             InventoryPool? @relation(fields: [poolId], references: [id])
+  assignedUserId   String?
+  assignedUser     User?     @relation("AssignedTo", fields: [assignedUserId], references: [id])
+  status           String    @default("IN_SERVICE") // operational status
+  condition        String    @default("GOOD")      // GOOD, FAIR, POOR
+  criticality      String    @default("NORMAL")    // LOW, NORMAL, HIGH, CRITICAL
+  purchaseCost     Float?
+  purchaseDate     DateTime?
+  warrantyEnd      DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  checkouts        Checkout[]
+  reservations     Reservation[]
+  workOrders       WorkOrder[]
+  calibrations     CalibrationEvent[]
+  depreciationBooks DepreciationBook[]
+  disposalRecord   DisposalRecord?
+  auditItems       InventoryAuditItem[]
+  returnTickets    ReturnTicket[]
+
+  @@unique([tenantId, assetTag])
+}
+
+// ============ CHECKOUT / CUSTODY ============
+
+model Checkout {
+  id            String    @id @default(cuid())
+  assetId       String
+  asset         Asset     @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  borrowerId    String
+  borrower      User      @relation(fields: [borrowerId], references: [id])
+  checkedOutAt  DateTime  @default(now())
+  dueDate       DateTime?
+  returnedAt    DateTime?
+  conditionOut  String?
+  conditionIn   String?
+  notes         String?
+  reason        String?   // reason for checkout / request (required for external)
+  requestedByName String? // requester display name (for ticket)
+  requestedByEmployeeId String? // employee ID (required for external requests)
+  poolId       String?   // optional trolley assignment (mechanical/electrical)
+  pool         InventoryPool? @relation(fields: [poolId], references: [id], onDelete: SetNull)
+  createdAt     DateTime  @default(now())
+  returnTicket  ReturnTicket?
+}
+
+// ============ RETURN TICKETS (auditable workflow) ============
+
+model ReturnTicket {
+  id             String    @id @default(cuid())
+  tenantId       String
+  tenant         Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  checkoutId     String    @unique
+  checkout       Checkout  @relation(fields: [checkoutId], references: [id], onDelete: Cascade)
+  assetId        String
+  asset          Asset     @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  status         String    // PENDING_APPROVAL, APPROVED, REJECTED, ARCHIVED
+  resolutionNotes String?
+  resolvedAt     DateTime?
+  approverId     String?
+  approver       User?     @relation(fields: [approverId], references: [id])
+  createdAt      DateTime  @default(now())
+  approvals      TicketApproval[]
+}
+
+model TicketApproval {
+  id             String       @id @default(cuid())
+  returnTicketId String
+  returnTicket   ReturnTicket @relation(fields: [returnTicketId], references: [id], onDelete: Cascade)
+  approverId     String
+  approver       User         @relation(fields: [approverId], references: [id], onDelete: Cascade)
+  decision       String       // APPROVE_OK, APPROVE_WITH_ISSUE, REJECT
+  notes          String?
+  createdAt      DateTime     @default(now())
+}
+
+// ============ RESERVATIONS ============
+
+model Reservation {
+  id         String    @id @default(cuid())
+  assetId    String?
+  asset      Asset?    @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  poolId     String?
+  pool       InventoryPool? @relation(fields: [poolId], references: [id])
+  requesterId String
+  requester  User      @relation(fields: [requesterId], references: [id])
+  startDate  DateTime
+  endDate    DateTime
+  status     String    @default("PENDING") // PENDING, CONFIRMED, CANCELLED, FULFILLED
+  priority   String    @default("NORMAL")  // LOW, NORMAL, HIGH
+  createdAt  DateTime  @default(now())
+}
+
+// ============ WORK ORDERS ============
+
+model WorkOrder {
+  id           String    @id @default(cuid())
+  assetId      String
+  asset        Asset     @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  type         String    // corrective, preventive
+  priority     String    @default("NORMAL") // LOW, NORMAL, HIGH, CRITICAL
+  status       String    @default("OPEN")   // OPEN, IN_PROGRESS, ON_HOLD, COMPLETED, CANCELLED
+  title        String
+  description  String?
+  assignedToId String?
+  assignedTo   User?     @relation(fields: [assignedToId], references: [id])
+  plannedStart DateTime?
+  plannedFinish DateTime?
+  completedAt  DateTime?
+  downtimeHours Float?
+  laborCost    Float?
+  partsCost    Float?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+// ============ CALIBRATION ============
+
+model CalibrationEvent {
+  id          String    @id @default(cuid())
+  assetId     String
+  asset       Asset     @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  scheduledDate DateTime?
+  performedDate DateTime?
+  result      String    // PASS, FAIL, OOT (out of tolerance)
+  certificateUrl String?
+  nextDueDate DateTime?
+  notes       String?
+  createdAt   DateTime  @default(now())
+}
+
+// ============ FINANCE (DEPRECIATION / DISPOSAL) ============
+
+model DepreciationBook {
+  id          String    @id @default(cuid())
+  assetId     String
+  asset       Asset     @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  method      String    // SL (straight-line), DDB
+  usefulLife  Int       // years
+  salvageValue Float?
+  startDate   DateTime
+  nbv         Float?    // net book value computed
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model DisposalRecord {
+  id          String    @id @default(cuid())
+  assetId     String    @unique
+  asset       Asset     @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  method      String    // sale, scrap, donate, transfer
+  disposalDate DateTime
+  proceeds    Float?
+  approvals   String?   // JSON or comma-separated approver IDs
+  createdAt   DateTime  @default(now())
+}
+
+// ============ AUDIT & INVENTORY ============
+
+model AuditLogEvent {
+  id         String   @id @default(cuid())
+  tenantId   String
+  tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  actorUserId String?
+  actor      User?    @relation(fields: [actorUserId], references: [id])
+  entityType String
+  entityId   String?
+  action     String   // CREATE, UPDATE, DELETE, CHECKOUT, RETURN, etc.
+  eventTs    DateTime @default(now())
+  diffJson   String   @default("{}") // JSON diff
+  ipAddress  String?
+}
+
+model InventoryAudit {
+  id          String   @id @default(cuid())
+  tenantId    String
+  scope       String?  // location, pool, etc.
+  status      String   @default("IN_PROGRESS") // IN_PROGRESS, COMPLETED
+  startedAt   DateTime @default(now())
+  completedAt DateTime?
+  items       InventoryAuditItem[]
+}
+
+model InventoryAuditItem {
+  id         String   @id @default(cuid())
+  auditId    String
+  audit      InventoryAudit @relation(fields: [auditId], references: [id], onDelete: Cascade)
+  assetId    String
+  asset      Asset    @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  expected   Boolean  @default(true)
+  found      Boolean
+  variance   String?  // missing, extra, misplaced
+  notes      String?
+}
+
+// ============ INTEGRATIONS ============
+
+model IntegrationConfig {
+  id        String   @id @default(cuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  type      String   // OIDC_SSO, SCIM, ERP, CMMS, BARCODE_RFID, IOT
+  enabled   Boolean  @default(false)
+  config    String   @default("{}") // JSON config
+  lastSync  DateTime?
+  status    String?  // OK, ERROR, PENDING
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

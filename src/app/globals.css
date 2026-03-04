@@ -1,0 +1,57 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import "../styles/tokens.css";
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+  html {
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  body {
+    background-color: var(--surface-1);
+    color: var(--text-0);
+    letter-spacing: var(--letter-spacing-tight);
+  }
+  h1, h2, h3, h4, h5, h6 {
+    letter-spacing: var(--letter-spacing-heading);
+  }
+}
+
+@layer utilities {
+  .focus-ring {
+    outline: none;
+    box-shadow: var(--focus-ring);
+  }
+  .focus-ring-visible:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+  }
+}
+
+/* Industrial table styling */
+.industrial-table {
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+.industrial-table th {
+  background: var(--surface-2);
+  color: var(--text-1);
+  font-weight: 600;
+  text-align: left;
+  padding: var(--space-2) var(--space-4);
+  border-bottom: 1px solid var(--border);
+}
+.industrial-table td {
+  padding: var(--space-2) var(--space-4);
+  border-bottom: 1px solid var(--border-subtle);
+  height: var(--table-row-height);
+}
+.industrial-table tbody tr:hover {
+  background: var(--surface-2);
+}

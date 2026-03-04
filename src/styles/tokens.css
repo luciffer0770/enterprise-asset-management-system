@@ -1,0 +1,122 @@
+/* Industrial Tooling Management - Bosch-like Design Tokens */
+/* NO Bosch logos or proprietary fonts - tokenized colors, open font fallbacks */
+
+:root {
+  /* Brand colors - Bosch-style */
+  --brand-red: #E00420;
+  --brand-dark-blue: #003057;
+  --brand-sidebar: #003057;
+  --brand-light-blue: #008ECF;
+  --brand-turquoise: #00A8B0;
+  --brand-light-green: #78BE20;
+  --brand-dark-green: #006249;
+
+  /* Header accent */
+  --header-red-bar: #E00420;
+
+  /* Bosch supergraphic band (gradient) - use as thin brand signature */
+  --supergraphic: linear-gradient(
+    90deg,
+    #E00420 0%,
+    #005691 25%,
+    #008ECF 50%,
+    #00A8B0 75%,
+    #78BE20 100%
+  );
+
+  /* Status pills (tool list) */
+  --status-available: #78BE20;
+  --status-issued: #E00420;
+  --status-maintenance: #F5A623;
+  --status-trolley: #008ECF;
+  --status-vendor: #6B46C1;
+  --status-client: #0EA5E9;
+
+  /* Neutrals */
+  --neutral-dark: #525F6B;
+  --neutral-light: #BFC0C2;
+
+  /* Surfaces */
+  --surface-0: #FFFFFF;
+  --surface-1: #F6F7F9;
+  --surface-2: #EBEEF2;
+
+  /* Borders */
+  --border: #D7DADF;
+  --border-subtle: #E8EBEF;
+
+  /* Text */
+  --text-0: #0B0F14;
+  --text-1: #2D343C;
+  --text-2: #525F6B;
+  --text-muted: #6B7280;
+
+  /* Semantic */
+  --success: #78BE20;
+  --warning: #F5A623;
+  --error: #E20015;
+  --info: #008ECF;
+
+  /* Radius */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 12px;
+
+  /* Spacing - 8px base (compact) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+
+  /* Density compact */
+  --table-row-height: 36px;
+  --input-height: 36px;
+  --button-height: 36px;
+
+  /* Focus */
+  --focus-ring: 0 0 0 3px color-mix(in srgb, var(--brand-light-blue) 35%, transparent);
+
+  /* Typography */
+  --font-sans: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --letter-spacing-heading: -0.02em;
+  --letter-spacing-tight: -0.01em;
+}
+
+/* Density: comfortable */
+[data-density="comfortable"] {
+  --table-row-height: 44px;
+  --input-height: 40px;
+  --button-height: 40px;
+  --space-2: 10px;
+  --space-3: 14px;
+  --space-4: 18px;
+}
+
+/* Dark mode */
+[data-theme="dark"],
+.dark {
+  --surface-0: #1A1D21;
+  --surface-1: #24282E;
+  --surface-2: #2D333B;
+
+  --border: #3D444D;
+  --border-subtle: #353B43;
+
+  --text-0: #F0F2F5;
+  --text-1: #D1D5DB;
+  --text-2: #9CA3AF;
+  --text-muted: #6B7280;
+
+  --neutral-dark: #9CA3AF;
+  --neutral-light: #4B5563;
+
+  /* Brand colors slightly adjusted for dark bg */
+  --brand-red: #FF4757;
+  --brand-dark-blue: #4DA6FF;
+  --brand-light-blue: #5BC0EB;
+}
